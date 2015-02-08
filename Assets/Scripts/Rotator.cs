@@ -7,6 +7,7 @@ public class Rotator : MonoBehaviour, InputHandler.InputListener {
 
     private InputHandler inputHandler;
 
+    private 
 
     void Start()
     {
@@ -24,13 +25,23 @@ public class Rotator : MonoBehaviour, InputHandler.InputListener {
         Camera.main.transform.position = cameraPosition;
     }
 
+    public void OnRotate(float amount)
+    {
+        // TODO: need to call this in InputHandler also!
+    }
+
     public void OnTwoFingerDrag(Vector2 direction)
     {
-        transform.Rotate(new Vector3(direction.y, -direction.x), Space.World);
+        transform.Rotate(direction * 0.5f, Space.World);
     }
 
     public void OnOneFingerDrag(Vector2 direction)
     {
         
+    }
+
+    public void OnTouchEnd()
+    {
+
     }
 }

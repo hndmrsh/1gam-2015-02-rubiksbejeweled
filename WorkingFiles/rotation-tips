@@ -1,0 +1,4 @@
+(Extremity means that axis value is 0 or BOARD_SIZE)
+
+- Rotate around X if moving a y-extremity in the Z direction, or a Z-extremity in the y direction
+(etc.)
