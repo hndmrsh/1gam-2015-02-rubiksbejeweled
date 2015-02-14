@@ -21,10 +21,11 @@ public class Spawner : MonoBehaviour {
 	// Use this for initialization
 	void Start () 
     {
+        cube.CalculateSize();
 
-        float startX = -((boardSize * cube.CubeWidth) / 2f) + (cube.CubeWidth / 2f);
-        float startY = -((boardSize * cube.CubeHeight) / 2f) + (cube.CubeHeight / 2f);
-        float startZ = -((boardSize * cube.CubeDepth) / 2f) + (cube.CubeDepth / 2f);
+        float startX = -((boardSize * Cube.CubeWidth) / 2f) + (Cube.CubeWidth / 2f);
+        float startY = -((boardSize * Cube.CubeHeight) / 2f) + (Cube.CubeHeight / 2f);
+        float startZ = -((boardSize * Cube.CubeDepth) / 2f) + (Cube.CubeDepth / 2f);
 
         SpawnCubes(startX, startY, startZ);
         SpawnAxes(startX, startY, startZ);
@@ -47,9 +48,9 @@ public class Spawner : MonoBehaviour {
                         continue;
                     }
 
-                    Vector3 xVector = Vector3.right * (startX + ((cube.CubeWidth + cubeSpacing) * x));
-                    Vector3 yVector = Vector3.up * (startY + ((cube.CubeHeight + cubeSpacing) * y));
-                    Vector3 zVector = Vector3.forward * (startZ + ((cube.CubeDepth + cubeSpacing) * z));
+                    Vector3 xVector = Vector3.right * (startX + ((Cube.CubeWidth + cubeSpacing) * x));
+                    Vector3 yVector = Vector3.up * (startY + ((Cube.CubeHeight + cubeSpacing) * y));
+                    Vector3 zVector = Vector3.forward * (startZ + ((Cube.CubeDepth + cubeSpacing) * z));
                     Vector3 pos = xVector + yVector + zVector;
 
                     Cube spawned = cube.Spawn(pos, colours[Random.Range(0, colours.Length)], board, new Vector3(x, y, z));
@@ -69,9 +70,9 @@ public class Spawner : MonoBehaviour {
 
         for (int i = 0; i < boardSize; i++)
         {
-            axes[(int) Axis.X][i] = CreateEmpty("Axis: x" + i, Vector3.right * (startX + ((cube.CubeWidth + cubeSpacing) * i)));
-            axes[(int) Axis.Y][i] = CreateEmpty("Axis: y" + i, Vector3.up * (startY + ((cube.CubeHeight + cubeSpacing) * i)));
-            axes[(int) Axis.Z][i] = CreateEmpty("Axis: z" + i, Vector3.forward * (startZ + ((cube.CubeDepth + cubeSpacing) * i)));
+            axes[(int)Axis.X][i] = CreateEmpty("Axis: x" + i, Vector3.right * (startX + ((Cube.CubeWidth + cubeSpacing) * i)));
+            axes[(int)Axis.Y][i] = CreateEmpty("Axis: y" + i, Vector3.up * (startY + ((Cube.CubeHeight + cubeSpacing) * i)));
+            axes[(int)Axis.Z][i] = CreateEmpty("Axis: z" + i, Vector3.forward * (startZ + ((Cube.CubeDepth + cubeSpacing) * i)));
         }
     }
 

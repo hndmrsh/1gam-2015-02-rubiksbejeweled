@@ -11,6 +11,8 @@ public class Rotator : MonoBehaviour, InputHandler.InputListener {
     private InputHandler inputHandler;
 
     private Cube touchingCube;
+    private GameObject touchingAxis;
+
     private Vector3 cubeHitNormal;
     private Spawner.Axis cubeTouchAxis;
     private int cubeTouchIndex;
@@ -44,6 +46,7 @@ public class Rotator : MonoBehaviour, InputHandler.InputListener {
 
     public void OnOneFingerDrag(Vector2 direction)
     {
+
         // if we weren't already touching a cube, find the cube and 
         if (!touchingCube)
         {
@@ -51,7 +54,6 @@ public class Rotator : MonoBehaviour, InputHandler.InputListener {
 
             if (touchingCube)
             {
-
                 // assume for now that we're moving up/down on the screen
 
                 if (cubeHitNormal == Vector3.back || cubeHitNormal == Vector3.forward)
@@ -71,7 +73,7 @@ public class Rotator : MonoBehaviour, InputHandler.InputListener {
                 }
 
                 Cube[] childrenCubes;
-                GameObject axis = spawner.MapCubesToAxis(cubeTouchAxis, cubeTouchIndex, out childrenCubes);
+                touchingAxis = spawner.MapCubesToAxis(cubeTouchAxis, cubeTouchIndex, out childrenCubes);
 
                 foreach (Cube c in childrenCubes)
                 {
@@ -80,7 +82,27 @@ public class Rotator : MonoBehaviour, InputHandler.InputListener {
             }
         }
 
-            
+        if (touchingCube)
+        {
+            Vector3 worldDirection = touchingCube.transform.TransformDirection(direction);
+
+            Vector3 rotation;
+            switch (cubeTouchAxis)
+            {
+                case Spawner.Axis.X:
+                    rotation = Vector3.right * worldDirection.x;
+                    break;
+                case Spawner.Axis.Y:
+                    rotation = Vector3.down * worldDirection.y;
+                    break;
+                case Spawner.Axis.Z:
+                default:
+                    rotation = Vector3.back * worldDirection.z;
+                    break;
+            }
+
+            touchingAxis.transform.Rotate(rotation * 0.5f);
+        }
 
     }
 
@@ -93,7 +115,7 @@ public class Rotator : MonoBehaviour, InputHandler.InputListener {
         Physics.Raycast(screenRay, out hitInfo, Mathf.Infinity, cubeMask);
 
         hitNormal = hitInfo.transform.InverseTransformDirection(hitInfo.normal);
-        Debug.Log("DRAG: " + hitInfo.transform.name + ", " + hitInfo.transform.InverseTransformDirection(hitInfo.normal));
+        // Debug.Log("DRAG: " + hitInfo.transform.name + ", " + hitInfo.transform.InverseTransformDirection(hitInfo.normal));
 
         return hitInfo.transform.gameObject.GetComponent<Cube>();
     }
