@@ -3,15 +3,22 @@ using System.Collections;
 
 public class Rotator : MonoBehaviour, InputHandler.InputListener {
 
+    public LayerMask cubeMask;
+
     private GameObject gameController;
+    private Spawner spawner;
 
     private InputHandler inputHandler;
 
-    private 
+    private Cube touchingCube;
+    private Vector3 cubeHitNormal;
+    private Spawner.Axis cubeTouchAxis;
+    private int cubeTouchIndex;
 
     void Start()
     {
         gameController = GameObject.FindGameObjectWithTag("GameController");
+        spawner = gameController.GetComponentInChildren<Spawner>();
 
         inputHandler = gameController.GetComponent<InputHandler>();
 
@@ -37,11 +44,71 @@ public class Rotator : MonoBehaviour, InputHandler.InputListener {
 
     public void OnOneFingerDrag(Vector2 direction)
     {
+        // if we weren't already touching a cube, find the cube and 
+        if (!touchingCube)
+        {
+            touchingCube = FindTouchingCube(out cubeHitNormal);
+
+            if (touchingCube)
+            {
+
+                // assume for now that we're moving up/down on the screen
+
+                if (cubeHitNormal == Vector3.back || cubeHitNormal == Vector3.forward)
+                {
+                    cubeTouchAxis = Spawner.Axis.X;
+                    cubeTouchIndex = (int)touchingCube.Index.x;
+                }
+                else if (cubeHitNormal == Vector3.up || cubeHitNormal == Vector3.down)
+                {
+                    cubeTouchAxis = Spawner.Axis.X;
+                    cubeTouchIndex = (int)touchingCube.Index.x;
+                }
+                else if (cubeHitNormal == Vector3.left || cubeHitNormal == Vector3.right)
+                {
+                    cubeTouchAxis = Spawner.Axis.Z;
+                    cubeTouchIndex = (int)touchingCube.Index.z;
+                }
+
+                Cube[] childrenCubes;
+                GameObject axis = spawner.MapCubesToAxis(cubeTouchAxis, cubeTouchIndex, out childrenCubes);
+
+                foreach (Cube c in childrenCubes)
+                {
+                    c.renderer.material.color = Color.white;
+                }
+            }
+        }
+
+            
+
+    }
+
+    private Cube FindTouchingCube(out Vector3 hitNormal)
+    {
+        Vector2 touchPos = Input.touches[0].position;
+        Ray screenRay = Camera.main.ScreenPointToRay(touchPos);
         
+        RaycastHit hitInfo;
+        Physics.Raycast(screenRay, out hitInfo, Mathf.Infinity, cubeMask);
+
+        hitNormal = hitInfo.transform.InverseTransformDirection(hitInfo.normal);
+        Debug.Log("DRAG: " + hitInfo.transform.name + ", " + hitInfo.transform.InverseTransformDirection(hitInfo.normal));
+
+        return hitInfo.transform.gameObject.GetComponent<Cube>();
     }
 
     public void OnTouchEnd()
     {
+        touchingCube = null;
 
+        Cube[] released;
+        spawner.UnmapCubesFromAxis(cubeTouchAxis, cubeTouchIndex, out released);
+
+        foreach (Cube c in released)
+        {
+            c.renderer.material.color = c.Colour;
+        }
     }
+
 }

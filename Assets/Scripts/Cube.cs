@@ -22,12 +22,24 @@ public class Cube : MonoBehaviour {
         set;
     }
 
+    public Vector3 Index
+    {
+        get;
+        set;
+    }
+
+    public Color Colour
+    {
+        get;
+        set;
+    }
+
     void Start()
     {
         this.gameController = GameObject.FindGameObjectWithTag("GameController");
     }
 
-    public void Spawn(Vector3 position, Color colour, GameObject board, Vector3 index)
+    public Cube Spawn(Vector3 position, Color colour, GameObject board, Vector3 index)
     {
         
         if(CubeWidth == 0f || CubeHeight == 0f || CubeDepth == 0f) {
@@ -41,6 +53,12 @@ public class Cube : MonoBehaviour {
         spawnedCube.transform.parent = board.transform;
         spawnedCube.renderer.material.color = colour;
         spawnedCube.name = "Cube: (" + (int)index.x + "," + (int)index.y + "," + (int)index.z + ")";
+
+        Cube newCube = spawnedCube.GetComponent<Cube>();
+        newCube.Index = index;
+        newCube.Colour = colour;
+
+        return newCube;
     }
 
 }

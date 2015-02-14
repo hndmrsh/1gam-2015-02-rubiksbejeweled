@@ -2,3 +2,10 @@
 
 - Rotate around X if moving a y-extremity in the Z direction, or a Z-extremity in the y direction
 (etc.)
+
+
+
+
+
+
+XAxis rotates in X local direction, YAxis rotates in Y local direction, ZAxis rotates in Z local direction
