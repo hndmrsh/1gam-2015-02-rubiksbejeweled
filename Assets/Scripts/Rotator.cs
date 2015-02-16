@@ -12,6 +12,8 @@ public class Rotator : MonoBehaviour, InputHandler.InputListener {
 
     private InputHandler inputHandler;
 
+    private GameObject board;
+
     private Cube touchingCube;
     private GameObject touchingAxis;
 
@@ -29,6 +31,8 @@ public class Rotator : MonoBehaviour, InputHandler.InputListener {
         gameController = GameObject.FindGameObjectWithTag("GameController");
         spawner = gameController.GetComponentInChildren<Spawner>();
 
+        board = GameObject.FindGameObjectWithTag("Board");
+
         inputHandler = gameController.GetComponent<InputHandler>();
 
         inputHandler.RegisterListener(this);
@@ -38,9 +42,11 @@ public class Rotator : MonoBehaviour, InputHandler.InputListener {
     {
         if (snapping)
         {
-            Debug.Log("snapAngle = " + snapToAngle);
+            Logger.SetValue("snapAngle", snapToAngle.ToString());
 
             Vector3 target;
+
+            timeSnapping += Time.deltaTime;
 
             switch (cubeTouchAxis)
             {
@@ -66,8 +72,6 @@ public class Rotator : MonoBehaviour, InputHandler.InputListener {
             }
 
             touchingAxis.transform.localEulerAngles = target;
-            
-            timeSnapping += Time.deltaTime;
 
             if (timeSnapping >= SNAP_TIME)
             {
@@ -81,12 +85,12 @@ public class Rotator : MonoBehaviour, InputHandler.InputListener {
         }
     }
 
-    public void OnPinch(float amount)
-    {
-        Vector3 cameraPosition = Camera.main.transform.position + Vector3.forward * -(amount / 50f);
-        cameraPosition.z = Mathf.Clamp(cameraPosition.z, -15, -10);
-        Camera.main.transform.position = cameraPosition;
-    }
+    //public void OnPinch(float amount)
+    //{
+    //    Vector3 cameraPosition = Camera.main.transform.position + Vector3.forward * -(amount / 50f);
+    //    cameraPosition.z = Mathf.Clamp(cameraPosition.z, -15, -10);
+    //    Camera.main.transform.position = cameraPosition;
+    //}
 
     public void OnRotate(float amount)
     {
@@ -113,7 +117,7 @@ public class Rotator : MonoBehaviour, InputHandler.InputListener {
                     Vector3 worldDirection = touchingCube.transform.TransformDirection(direction);
 
                     float angle = Vector3.Angle(worldDirection, -touchingCube.transform.right);
-                    Debug.Log("angle = " + angle);
+                    Logger.SetValue("angle", angle.ToString());
 
                     if (cubeHitNormal == Vector3.back || cubeHitNormal == Vector3.forward)
                     {
@@ -130,13 +134,29 @@ public class Rotator : MonoBehaviour, InputHandler.InputListener {
                     }
                     else if (cubeHitNormal == Vector3.up || cubeHitNormal == Vector3.down)
                     {
-                        cubeTouchAxis = Spawner.Axis.X;
-                        cubeTouchIndex = (int)touchingCube.Index.x;
+                        if (angle < 45 || angle > 135)
+                        {
+                            cubeTouchAxis = Spawner.Axis.X;
+                            cubeTouchIndex = (int)touchingCube.Index.x;
+                        }
+                        else
+                        {
+                            cubeTouchAxis = Spawner.Axis.Y;
+                            cubeTouchIndex = (int)touchingCube.Index.y;
+                        }
                     }
                     else if (cubeHitNormal == Vector3.left || cubeHitNormal == Vector3.right)
                     {
-                        cubeTouchAxis = Spawner.Axis.Z;
-                        cubeTouchIndex = (int)touchingCube.Index.z;
+                        if (angle < 45 || angle > 135)
+                        {
+                            cubeTouchAxis = Spawner.Axis.Z;
+                            cubeTouchIndex = (int)touchingCube.Index.z;
+                        }
+                        else
+                        {
+                            cubeTouchAxis = Spawner.Axis.X;
+                            cubeTouchIndex = (int)touchingCube.Index.x;
+                        }
                     }
 
                     Cube[] childrenCubes;
@@ -151,7 +171,9 @@ public class Rotator : MonoBehaviour, InputHandler.InputListener {
 
             if (touchingCube)
             {
-                Vector3 worldDirection = touchingCube.transform.TransformDirection(direction);
+                Vector3 worldDirection = board.transform.TransformDirection(direction);
+
+                Logger.SetValue("worldDirection", worldDirection.ToString());
 
                 Vector3 rotation;
                 switch (cubeTouchAxis)
@@ -182,7 +204,7 @@ public class Rotator : MonoBehaviour, InputHandler.InputListener {
         Physics.Raycast(screenRay, out hitInfo, Mathf.Infinity, cubeMask);
 
         hitNormal = hitInfo.transform.InverseTransformDirection(hitInfo.normal);
-        Debug.Log("DRAG: " + hitInfo.transform.name + ", " + hitInfo.transform.InverseTransformDirection(hitInfo.normal));
+        Logger.SetValue("DRAG", hitInfo.transform.name + ", " + hitInfo.transform.InverseTransformDirection(hitInfo.normal));
 
         return hitInfo.transform.gameObject.GetComponent<Cube>();
     }

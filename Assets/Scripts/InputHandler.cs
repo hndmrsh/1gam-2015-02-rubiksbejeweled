@@ -17,7 +17,7 @@ public class InputHandler : MonoBehaviour {
 
     public interface InputListener
     {
-        void OnPinch(float amount);
+        //void OnPinch(float amount);
         void OnRotate(float amount);
         void OnTwoFingerDrag(Vector2 direction);
         void OnOneFingerDrag(Vector2 direction);
@@ -85,10 +85,10 @@ public class InputHandler : MonoBehaviour {
                     // Find the difference in the distances between each frame.
                     float deltaMagnitudeDiff = prevTouchDeltaMag - touchDeltaMag;
 
-                    foreach (InputListener l in listeners)
-                    {
-                        l.OnPinch(deltaMagnitudeDiff);
-                    }
+                    //foreach (InputListener l in listeners)
+                    //{
+                    //    l.OnPinch(deltaMagnitudeDiff);
+                    //}
                 }
 
             }

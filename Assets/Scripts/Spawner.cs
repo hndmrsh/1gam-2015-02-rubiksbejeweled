@@ -16,7 +16,10 @@ public class Spawner : MonoBehaviour {
     public Color[] colours;
 
     private Cube[,,] cubes;
+
     private GameObject[][] axes;
+
+    private Vector3 cachedAxisRotation;
 
 	// Use this for initialization
 	void Start () 
@@ -89,12 +92,20 @@ public class Spawner : MonoBehaviour {
     public GameObject MapCubesToAxis(Axis axis, int index, out Cube[] mappedChildrenCubes) {
         GameObject ax = axes[(int)axis][index];
         SetParentAllCubes(axis, index, ax, out mappedChildrenCubes);
+
+        cachedAxisRotation = ax.transform.localEulerAngles;
+
         return ax;
     }
 
     public void UnmapCubesFromAxis(Axis axis, int index, out Cube[] mappedChildrenCubes)
     {
         SetParentAllCubes(axis, index, board, out mappedChildrenCubes);
+
+        GameObject ax = axes[(int)axis][index];
+        Vector3 diff = ax.transform.localEulerAngles - cachedAxisRotation;
+
+        Logger.SetValue("diff", (Mathf.RoundToInt(diff.x) / 90).ToString());
     }
 
     private void SetParentAllCubes(Axis axis, int index, GameObject newParent, out Cube[] mappedChildrenCubes)
