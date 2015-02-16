@@ -106,58 +106,16 @@ public class Rotator : MonoBehaviour, InputHandler.InputListener {
     {
         if (!snapping)
         {
-            // if we weren't already touching a cube, find the cube and 
+            // if we weren't already touching a cube, find the touching cube and set the correct axis
+
             if (!touchingCube)
             {
                 touchingCube = FindTouchingCube(out cubeHitNormal);
 
                 if (touchingCube)
                 {
-                    // assume for now that we're moving up/down on the screen
-                    Vector3 worldDirection = touchingCube.transform.TransformDirection(direction);
+                    // need to set value to cubeTouchAxis and cubeTouchIndex
 
-                    float angle = Vector3.Angle(worldDirection, -touchingCube.transform.right);
-                    Logger.SetValue("angle", angle.ToString());
-
-                    if (cubeHitNormal == Vector3.back || cubeHitNormal == Vector3.forward)
-                    {
-                        if (angle < 45 || angle > 135)
-                        {
-                            cubeTouchAxis = Spawner.Axis.X;
-                            cubeTouchIndex = (int)touchingCube.Index.x;
-                        }
-                        else
-                        {
-                            cubeTouchAxis = Spawner.Axis.Y;
-                            cubeTouchIndex = (int)touchingCube.Index.y;
-                        }
-                    }
-                    else if (cubeHitNormal == Vector3.up || cubeHitNormal == Vector3.down)
-                    {
-                        if (angle < 45 || angle > 135)
-                        {
-                            cubeTouchAxis = Spawner.Axis.X;
-                            cubeTouchIndex = (int)touchingCube.Index.x;
-                        }
-                        else
-                        {
-                            cubeTouchAxis = Spawner.Axis.Y;
-                            cubeTouchIndex = (int)touchingCube.Index.y;
-                        }
-                    }
-                    else if (cubeHitNormal == Vector3.left || cubeHitNormal == Vector3.right)
-                    {
-                        if (angle < 45 || angle > 135)
-                        {
-                            cubeTouchAxis = Spawner.Axis.Z;
-                            cubeTouchIndex = (int)touchingCube.Index.z;
-                        }
-                        else
-                        {
-                            cubeTouchAxis = Spawner.Axis.X;
-                            cubeTouchIndex = (int)touchingCube.Index.x;
-                        }
-                    }
 
                     Cube[] childrenCubes;
                     touchingAxis = spawner.MapCubesToAxis(cubeTouchAxis, cubeTouchIndex, out childrenCubes);
@@ -166,10 +124,11 @@ public class Rotator : MonoBehaviour, InputHandler.InputListener {
                     {
                         c.renderer.material.color = Color.white;
                     }
+
                 }
             }
 
-            if (touchingCube)
+            if (touchingAxis)
             {
                 Vector3 worldDirection = board.transform.TransformDirection(direction);
 

@@ -52,12 +52,14 @@ public class Cube : MonoBehaviour {
         GameObject spawnedCube = (GameObject) Instantiate(gameObject, position, Quaternion.identity);
         
         spawnedCube.transform.parent = board.transform;
-        spawnedCube.renderer.material.color = colour;
+        //spawnedCube.renderer.material.color = colour;
         spawnedCube.name = "Cube: (" + (int)index.x + "," + (int)index.y + "," + (int)index.z + ")";
 
         Cube newCube = spawnedCube.GetComponent<Cube>();
         newCube.Index = index;
         newCube.Colour = colour;
+
+
 
         return newCube;
     }
