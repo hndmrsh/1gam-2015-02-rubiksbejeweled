@@ -1,7 +1,14 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class Cube : MonoBehaviour {
+public abstract class Cube : MonoBehaviour
+{
+
+    #region Child face constants
+    public const string xFace = "XGlobalFace";
+    public const string yFace = "YGlobalFace";
+    public const string zFace = "ZGlobalFace";
+    #endregion
 
     private GameObject gameController;
 
@@ -47,21 +54,27 @@ public class Cube : MonoBehaviour {
         CubeDepth = renderer.bounds.size.z;
     }
 
-    public Cube Spawn(Vector3 position, Color colour, GameObject board, Vector3 index)
+    public Cube Spawn(Vector3 position, Color[] colourChoices, GameObject board, int boardSize, Vector3 index)
     {
-        GameObject spawnedCube = (GameObject) Instantiate(gameObject, position, Quaternion.identity);
-        
+        int x = (int)index.x;
+        int y = (int)index.y;
+        int z = (int)index.z;
+
+        GameObject spawnedCube = (GameObject) Instantiate(gameObject, position, CalculateRotation(x, y, z, boardSize));
         spawnedCube.transform.parent = board.transform;
-        //spawnedCube.renderer.material.color = colour;
-        spawnedCube.name = "Cube: (" + (int)index.x + "," + (int)index.y + "," + (int)index.z + ")";
+
+        spawnedCube.name = "Cube: (" + x + "," + y + "," + z + ")";
 
         Cube newCube = spawnedCube.GetComponent<Cube>();
         newCube.Index = index;
-        newCube.Colour = colour;
 
-
+        ColourFaces(newCube, colourChoices);
 
         return newCube;
     }
+
+    protected abstract Quaternion CalculateRotation(int x, int y, int z, int boardSize);
+
+    protected abstract void ColourFaces(Cube spawned, Color[] colourChoices);
 
 }

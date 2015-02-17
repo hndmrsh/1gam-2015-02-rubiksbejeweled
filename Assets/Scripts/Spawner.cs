@@ -9,13 +9,18 @@ public class Spawner : MonoBehaviour {
     }
 
     public GameObject board;
-    public Cube cube;
+
+    public CornerCube cornerCube;
+    public MidCube midCube;
+    public EdgeCube edgeCube;
+    
     public int boardSize;
     public float cubeSpacing;
 
     public Color[] colours;
 
     private Cube[,,] cubes;
+    private Face[][][] faces;
 
     private GameObject[][] axes;
 
@@ -24,15 +29,29 @@ public class Spawner : MonoBehaviour {
 	// Use this for initialization
 	void Start () 
     {
-        cube.CalculateSize();
+        // initialize the 3D faces array
+        faces = new Face[6][][];
+        for (int i = 0; i < 6; i++)
+        {
+            faces[i] = new Face[boardSize][];
+            for (int j = 0; j < boardSize; j++)
+            {
+                faces[i][j] = new Face[boardSize];
+            }
+        }
 
-        float startX = -((boardSize * Cube.CubeWidth) / 2f) + (Cube.CubeWidth / 2f);
-        float startY = -((boardSize * Cube.CubeHeight) / 2f) + (Cube.CubeHeight / 2f);
-        float startZ = -((boardSize * Cube.CubeDepth) / 2f) + (Cube.CubeDepth / 2f);
+        cornerCube.CalculateSize();
+
+        float startX = -((boardSize * (Cube.CubeWidth + cubeSpacing)) / 2f) + ((Cube.CubeWidth + cubeSpacing) / 2f);
+        float startY = -((boardSize * (Cube.CubeHeight+ cubeSpacing)) / 2f) + ((Cube.CubeHeight + cubeSpacing) / 2f);
+        float startZ = -((boardSize * (Cube.CubeDepth + cubeSpacing)) / 2f) + ((Cube.CubeDepth + cubeSpacing) / 2f);
+
 
         SpawnCubes(startX, startY, startZ);
         SpawnAxes(startX, startY, startZ);
-       
+
+        // TODO: populate the faces array by raycasting at every face on the cube
+
 	}
 
     private void SpawnCubes(float startX, float startY, float startZ)
@@ -56,10 +75,42 @@ public class Spawner : MonoBehaviour {
                     Vector3 zVector = Vector3.forward * (startZ + ((Cube.CubeDepth + cubeSpacing) * z));
                     Vector3 pos = xVector + yVector + zVector;
 
-                    Cube spawned = cube.Spawn(pos, colours[Random.Range(0, colours.Length)], board, new Vector3(x, y, z));
+                    Cube spawned = GetCubeType(x,y,z).Spawn(pos, colours, board, boardSize, new Vector3(x, y, z));
                     cubes[x, y, z] = spawned;
                 }
             }
+        }
+    }
+
+    private Cube GetCubeType(int x, int y, int z)
+    {
+        int endCount = 0;
+
+        if (x == 0 || x == boardSize - 1)
+        {
+            endCount++;
+        }
+
+        if (y == 0 || y == boardSize - 1)
+        {
+            endCount++;
+        }
+
+        if (z == 0 || z == boardSize - 1)
+        {
+            endCount++;
+        }
+
+        switch (endCount)
+        {
+            case 1:
+                return midCube;
+            case 2:
+                return edgeCube;
+            case 3:
+                return cornerCube;
+            default:
+                throw new System.InvalidOperationException("Impossible location");
         }
     }
 
