@@ -10,6 +10,8 @@ public class Spawner : MonoBehaviour {
 
     public GameObject board;
 
+    public LayerMask faceMask;
+
     public CornerCube cornerCube;
     public MidCube midCube;
     public EdgeCube edgeCube;
@@ -20,11 +22,22 @@ public class Spawner : MonoBehaviour {
     public Color[] colours;
 
     private Cube[,,] cubes;
+
+    /// <summary>
+    /// Usage: faces[face][x][y];
+    /// The faces array is set up as follows:
+    /// face = a Face.Direction enum
+    /// x, y = the x/y index of the face if you were to look at the face "front on"
+    /// </summary>
     private Face[][][] faces;
 
     private GameObject[][] axes;
 
     private Vector3 cachedAxisRotation;
+
+    private float startX;
+    private float startY;
+    private float startZ;
 
 	// Use this for initialization
 	void Start () 
@@ -42,15 +55,12 @@ public class Spawner : MonoBehaviour {
 
         cornerCube.CalculateSize();
 
-        float startX = -((boardSize * (Cube.CubeWidth + cubeSpacing)) / 2f) + ((Cube.CubeWidth + cubeSpacing) / 2f);
-        float startY = -((boardSize * (Cube.CubeHeight+ cubeSpacing)) / 2f) + ((Cube.CubeHeight + cubeSpacing) / 2f);
-        float startZ = -((boardSize * (Cube.CubeDepth + cubeSpacing)) / 2f) + ((Cube.CubeDepth + cubeSpacing) / 2f);
-
+        startX = -((boardSize * (Cube.CubeWidth + cubeSpacing)) / 2f) + ((Cube.CubeWidth + cubeSpacing) / 2f);
+        startY = -((boardSize * (Cube.CubeHeight+ cubeSpacing)) / 2f) + ((Cube.CubeHeight + cubeSpacing) / 2f);
+        startZ = -((boardSize * (Cube.CubeDepth + cubeSpacing)) / 2f) + ((Cube.CubeDepth + cubeSpacing) / 2f);
 
         SpawnCubes(startX, startY, startZ);
         SpawnAxes(startX, startY, startZ);
-
-        // TODO: populate the faces array by raycasting at every face on the cube
 
 	}
 
@@ -77,9 +87,72 @@ public class Spawner : MonoBehaviour {
 
                     Cube spawned = GetCubeType(x,y,z).Spawn(pos, colours, board, boardSize, new Vector3(x, y, z));
                     cubes[x, y, z] = spawned;
+
+                    Vector3 origin = pos;
+                    if (z == 0)
+                    {
+                        origin.z += -1;
+                        Face f = RaycastToFace(origin, Vector3.forward);
+                        faces[(int)Face.Direction.Front][x][y] = f;
+                        f.FaceDirection = Face.Direction.Front;
+                    }
+                    else if (z == boardSize - 1)
+                    {
+                        origin.z += 1;
+                        Face f = RaycastToFace(origin, Vector3.back);
+                        faces[(int)Face.Direction.Back][boardSize - 1 - x][y] = f;
+                        f.FaceDirection = Face.Direction.Back;
+                    }
+
+                    origin = pos;
+                    if (x == 0)
+                    {
+                        origin.x += -1;
+                        Face f = RaycastToFace(origin, Vector3.right);
+                        faces[(int)Face.Direction.Left][boardSize - 1 - z][y] = f;
+                        f.FaceDirection = Face.Direction.Left;
+                    } 
+                    else if (x == boardSize - 1)
+                    {
+                        origin.x += 1;
+                        Face f = RaycastToFace(origin, Vector3.left);
+                        faces[(int)Face.Direction.Right][z][y] = f;
+                        f.FaceDirection = Face.Direction.Right;
+                    }
+
+                    origin = pos;
+                    if (y == 0)
+                    {
+                        origin.y += -1;
+                        Face f = RaycastToFace(origin, Vector3.up);
+                        faces[(int)Face.Direction.Bottom][x][boardSize - 1 - z] = f;
+                        f.FaceDirection = Face.Direction.Bottom;
+                    }
+                    else if (y == boardSize - 1)
+                    {
+                        origin.y += 1;
+                        Face f = RaycastToFace(origin, Vector3.down);
+                        faces[(int)Face.Direction.Top][x][z] = f;
+                        f.FaceDirection = Face.Direction.Top;
+                    }
                 }
             }
         }
+    }
+
+    private Face RaycastToFace(Vector3 origin, Vector3 direction)
+    {
+        Ray screenRay = new Ray(origin, direction);
+
+        RaycastHit hitInfo;
+        Physics.Raycast(screenRay, out hitInfo, 1.1f, faceMask);
+
+        if (hitInfo.transform)
+        {
+            return hitInfo.transform.gameObject.GetComponent<Face>();
+        }
+
+        return null;
     }
 
     private Cube GetCubeType(int x, int y, int z)
@@ -203,4 +276,49 @@ public class Spawner : MonoBehaviour {
     
     #endregion
 
+    /// <summary>
+    /// Determine the correct axis to rotate the selected cubes around.
+    /// </summary>
+    /// <param name="dragAngle"></param>
+    /// <param name="cubeTouchIndex"></param>
+    /// <returns></returns>
+    public Axis DetermineAxis(float dragAngle, Face.Direction faceDirection, out Vector2 directionCorrection) {
+        switch (faceDirection)
+        {
+            case Face.Direction.Front:
+            case Face.Direction.Back:
+                directionCorrection = new Vector2(1, -1);
+                if (dragAngle < 45 || dragAngle > 135)
+                {
+                    return Spawner.Axis.Y;
+                }
+                else
+                {
+                    return Spawner.Axis.X;
+                }
+            case Face.Direction.Left:
+            case Face.Direction.Right:
+                directionCorrection = new Vector2(-1, -1);
+                if (dragAngle < 45 || dragAngle > 135)
+                {
+                    return Spawner.Axis.Y;
+                }
+                else
+                {
+                    return Spawner.Axis.Z;
+                }
+            case Face.Direction.Top:
+            case Face.Direction.Bottom:
+            default:
+                directionCorrection = new Vector2(1, -1);
+                if (dragAngle < 45 || dragAngle > 135)
+                {
+                    return Spawner.Axis.Z;
+                }
+                else
+                {
+                    return Spawner.Axis.X;
+                }
+        }
+    }
 }

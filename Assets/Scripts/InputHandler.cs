@@ -6,6 +6,8 @@ public class InputHandler : MonoBehaviour {
 
     private const float PINCH_THRESHOLD = 90f;
 
+    public float dragDeadzone = 1.5f;
+
     private bool touchDown = false;
 
     public enum TwoFingerTouchMode
@@ -103,7 +105,10 @@ public class InputHandler : MonoBehaviour {
 
                     if (twoFingerTouchMode == TwoFingerTouchMode.None)
                     {
-                        l.OnOneFingerDrag(CorrectAngles(singleTouch.deltaPosition));
+                        if (singleTouch.deltaPosition.magnitude >= dragDeadzone)
+                        {
+                            l.OnOneFingerDrag(CorrectAngles(singleTouch.deltaPosition));
+                        }
                     }
                     else if(twoFingerTouchMode == TwoFingerTouchMode.Drag)
                     {

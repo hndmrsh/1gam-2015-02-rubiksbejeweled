@@ -6,6 +6,7 @@ public class Rotator : MonoBehaviour, InputHandler.InputListener {
     private const float SNAP_TIME = 0.2f;
 
     public LayerMask cubeMask;
+    public LayerMask faceMask;
 
     private GameObject gameController;
     private Spawner spawner;
@@ -20,6 +21,8 @@ public class Rotator : MonoBehaviour, InputHandler.InputListener {
     private Vector3 cubeHitNormal;
     private Spawner.Axis cubeTouchAxis;
     private int cubeTouchIndex;
+
+    private Vector2 correctedDragDirection;
 
     private bool snapping = false;
     private float timeSnapping = 0f;
@@ -104,6 +107,8 @@ public class Rotator : MonoBehaviour, InputHandler.InputListener {
 
     public void OnOneFingerDrag(Vector2 direction)
     {
+        direction /= 2f;
+
         if (!snapping)
         {
             // if we weren't already touching a cube, find the touching cube and set the correct axis
@@ -114,8 +119,25 @@ public class Rotator : MonoBehaviour, InputHandler.InputListener {
 
                 if (touchingCube)
                 {
-                    // need to set value to cubeTouchAxis and cubeTouchIndex
 
+                    Face touchingFace = FindTouchingFace();
+
+                    float dragAngle = Vector3.Angle(Vector3.up, direction);
+                    Logger.SetValue("drag angle", dragAngle.ToString());
+                    cubeTouchAxis = spawner.DetermineAxis(dragAngle, touchingFace.FaceDirection, out correctedDragDirection);
+
+                    if (cubeTouchAxis == Spawner.Axis.X)
+                    {
+                        cubeTouchIndex = (int)touchingCube.Index.x;
+                    }
+                    else if (cubeTouchAxis == Spawner.Axis.Y) 
+                    {
+                        cubeTouchIndex = (int)touchingCube.Index.y;
+                    }
+                    else if (cubeTouchAxis == Spawner.Axis.Z)
+                    {
+                        cubeTouchIndex = (int)touchingCube.Index.z;
+                    }
 
                     Cube[] childrenCubes;
                     touchingAxis = spawner.MapCubesToAxis(cubeTouchAxis, cubeTouchIndex, out childrenCubes);
@@ -130,7 +152,7 @@ public class Rotator : MonoBehaviour, InputHandler.InputListener {
 
             if (touchingAxis)
             {
-                Vector3 worldDirection = board.transform.TransformDirection(direction);
+                Vector3 worldDirection = board.transform.InverseTransformDirection(CorrectAngles(direction));
 
                 Logger.SetValue("worldDirection", worldDirection.ToString());
 
@@ -154,6 +176,14 @@ public class Rotator : MonoBehaviour, InputHandler.InputListener {
         }
     }
 
+    private Vector3 CorrectAngles(Vector2 direction)
+    {
+        Vector3 result = Vector3.zero;
+        result.x = direction.x * correctedDragDirection.x;
+        result.y = direction.y * correctedDragDirection.y;
+        return result;
+    }
+
     private Cube FindTouchingCube(out Vector3 hitNormal)
     {
         Vector2 touchPos = Input.touches[0].position;
@@ -162,32 +192,57 @@ public class Rotator : MonoBehaviour, InputHandler.InputListener {
         RaycastHit hitInfo;
         Physics.Raycast(screenRay, out hitInfo, Mathf.Infinity, cubeMask);
 
-        hitNormal = hitInfo.transform.InverseTransformDirection(hitInfo.normal);
-        Logger.SetValue("DRAG", hitInfo.transform.name + ", " + hitInfo.transform.InverseTransformDirection(hitInfo.normal));
+        if (hitInfo.transform)
+        {
+            hitNormal = hitInfo.transform.InverseTransformDirection(hitInfo.normal);
+            Logger.SetValue("DRAG", hitInfo.transform.name + ", " + hitInfo.transform.InverseTransformDirection(hitInfo.normal));
 
-        return hitInfo.transform.gameObject.GetComponent<Cube>();
+            return hitInfo.transform.gameObject.GetComponent<Cube>();
+        }
+
+        hitNormal = Vector3.zero;
+        return null;
+    }
+
+    private Face FindTouchingFace()
+    {
+        Vector2 touchPos = Input.touches[0].position;
+        Ray screenRay = Camera.main.ScreenPointToRay(touchPos);
+
+        RaycastHit hitInfo;
+        Physics.Raycast(screenRay, out hitInfo, Mathf.Infinity, faceMask);
+
+        if (hitInfo.transform)
+        {
+            return hitInfo.transform.gameObject.GetComponent<Face>();
+        }
+
+        return null;
     }
 
     public void OnTouchEnd()
     {
-        touchingCube = null;
-        snapping = true;
-
-        switch (cubeTouchAxis)
+        if (touchingAxis)
         {
-            case Spawner.Axis.X:
-                startSnapAngle = touchingAxis.transform.localEulerAngles.x;
-                snapToAngle = CalculateTargetAngle(touchingAxis.transform.localEulerAngles.x);
-                break;
-            case Spawner.Axis.Y:
-                startSnapAngle = touchingAxis.transform.localEulerAngles.y;
-                snapToAngle = CalculateTargetAngle(touchingAxis.transform.localEulerAngles.y);
-                break;
-            case Spawner.Axis.Z:
-            default:
-                startSnapAngle = touchingAxis.transform.localEulerAngles.z;
-                snapToAngle = CalculateTargetAngle(touchingAxis.transform.localEulerAngles.z);
-                break;
+            touchingCube = null;
+            snapping = true;
+
+            switch (cubeTouchAxis)
+            {
+                case Spawner.Axis.X:
+                    startSnapAngle = touchingAxis.transform.localEulerAngles.x;
+                    snapToAngle = CalculateTargetAngle(touchingAxis.transform.localEulerAngles.x);
+                    break;
+                case Spawner.Axis.Y:
+                    startSnapAngle = touchingAxis.transform.localEulerAngles.y;
+                    snapToAngle = CalculateTargetAngle(touchingAxis.transform.localEulerAngles.y);
+                    break;
+                case Spawner.Axis.Z:
+                default:
+                    startSnapAngle = touchingAxis.transform.localEulerAngles.z;
+                    snapToAngle = CalculateTargetAngle(touchingAxis.transform.localEulerAngles.z);
+                    break;
+            }
         }
     }
 
