@@ -35,6 +35,8 @@ public class Rotator : MonoBehaviour, InputHandler.InputListener {
     private float startSnapAngle = 0f;
     private float snapToAngle = 0f;
 
+    private Vector3 cachedAxisRotation;
+
     # region Start/Update
 
     void Start()
@@ -140,6 +142,12 @@ public class Rotator : MonoBehaviour, InputHandler.InputListener {
 
     private void FinishedSnap()
     {
+        Vector3 fixedCached = FixedEulerAngles(cachedAxisRotation);
+        Vector3 fixedNew = FixedEulerAngles(touchingAxis.transform.localEulerAngles);
+
+        Logger.SetValue("OLD ROT", fixedCached.ToString());
+        Logger.SetValue("NEW ROT", fixedNew.ToString());
+
         touchingAxis = null;
 
         Cube[] released;
@@ -149,6 +157,18 @@ public class Rotator : MonoBehaviour, InputHandler.InputListener {
         {
             c.renderer.material.color = c.Colour;
         }
+    }
+
+    private Vector3 FixedEulerAngles(Vector3 eulerAngles)
+    {
+        if (cubeTouchAxis == Spawner.Axis.X && eulerAngles.y > 175f)
+        {
+            return new Vector3(eulerAngles.x + 180f,
+                eulerAngles.y - 180f,
+                eulerAngles.z - 180f);
+        }
+
+        return eulerAngles;
     }
 
     /// <summary>
@@ -339,6 +359,8 @@ public class Rotator : MonoBehaviour, InputHandler.InputListener {
 
                 Cube[] childrenCubes;
                 touchingAxis = spawner.MapCubesToAxis(cubeTouchAxis, cubeTouchIndex, out childrenCubes);
+
+                cachedAxisRotation = touchingAxis.transform.localEulerAngles;
 
                 // DEBUGGING!
                 foreach (Cube c in childrenCubes)
