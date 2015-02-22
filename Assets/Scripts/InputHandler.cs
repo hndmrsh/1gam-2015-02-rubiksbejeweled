@@ -23,6 +23,7 @@ public class InputHandler : MonoBehaviour {
         void OnRotate(float amount);
         void OnTwoFingerDrag(Vector2 direction);
         void OnOneFingerDrag(Vector2 direction);
+        void OnTouchStart();
         void OnTouchEnd();
     }
 
@@ -130,6 +131,13 @@ public class InputHandler : MonoBehaviour {
                 foreach (InputListener l in listeners)
                 {
                     l.OnTouchEnd();
+                }
+            }
+            else if (!oldTouchDown && touchDown)
+            {
+                foreach (InputListener l in listeners)
+                {
+                    l.OnTouchStart();
                 }
             }
         }

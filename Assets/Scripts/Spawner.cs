@@ -62,7 +62,149 @@ public class Spawner : MonoBehaviour {
         SpawnCubes(startX, startY, startZ);
         SpawnAxes(startX, startY, startZ);
 
+        GenerateFaceAdjacencies();
 	}
+
+    private void GenerateFaceAdjacencies()
+    {
+        for (int f = 0; f < 6; f++)
+        {
+            for (int x = 0; x < boardSize; x++)
+            {
+                for (int y = 0; y < boardSize; y++)
+                {
+                    Face face = faces[f][x][y];
+                    face.Neighbours = new Face[4];
+
+                    face.Neighbours[0] = GetFaceUp(f, x, y);
+                    face.Neighbours[1] = GetFaceLeft(f, x, y);
+                    face.Neighbours[2] = GetFaceRight(f, x, y);
+                    face.Neighbours[3] = GetFaceDown(f, x, y);
+                }
+            }
+        }
+    }
+
+    private Face GetFaceUp(int f, int x, int y)
+    {
+        Face face = faces[f][x][y];
+        
+        if (y < boardSize - 1)
+        {
+            return faces[f][x][y + 1];
+        }
+        else
+        {
+            switch (f)
+            {
+                case (int)Face.Direction.Front:
+                    return faces[(int)Face.Direction.Top][x][0];
+                case (int)Face.Direction.Left:
+                    return faces[(int)Face.Direction.Top][0][boardSize - 1 - x];
+                case (int)Face.Direction.Right:
+                    return faces[(int)Face.Direction.Top][boardSize - 1][x];
+                case (int)Face.Direction.Back:
+                    return faces[(int)Face.Direction.Top][boardSize - 1 - x][boardSize - 1];
+                case (int)Face.Direction.Top:
+                    return faces[(int)Face.Direction.Back][boardSize - 1 - x][boardSize - 1];
+                case (int)Face.Direction.Bottom:
+                    return faces[(int)Face.Direction.Front][x][0];
+            }
+        }
+
+
+        return null;
+    }
+
+    private Face GetFaceDown(int f, int x, int y)
+    {
+        Face face = faces[f][x][y];
+
+        if (y > 0)
+        {
+            return faces[f][x][y - 1];
+        }
+        else
+        {
+            switch (f)
+            {
+                case (int) Face.Direction.Front:
+                    return faces[(int)Face.Direction.Bottom][x][boardSize - 1];
+                case (int) Face.Direction.Left:
+                    return faces[(int)Face.Direction.Bottom][0][x];
+                case (int)Face.Direction.Right:
+                    return faces[(int)Face.Direction.Bottom][boardSize - 1][boardSize - 1 - x];
+                case (int)Face.Direction.Back:
+                    return faces[(int)Face.Direction.Bottom][boardSize - 1 - x][0];
+                case (int)Face.Direction.Top:
+                    return faces[(int)Face.Direction.Front][x][boardSize - 1];
+                case (int)Face.Direction.Bottom:
+                    return faces[(int)Face.Direction.Back][boardSize - 1 - x][0];
+            }
+        }
+
+        return null;
+    }
+
+    private Face GetFaceLeft(int f, int x, int y)
+    {
+        Face face = faces[f][x][y];
+
+        if (x > 0)
+        {
+            return faces[f][x - 1][y];
+        }
+        else
+        {
+            switch (f)
+            {
+                case (int)Face.Direction.Front:
+                    return faces[(int)Face.Direction.Left][boardSize - 1][y];
+                case (int)Face.Direction.Left:
+                    return faces[(int)Face.Direction.Back][boardSize - 1][y];
+                case (int)Face.Direction.Right:
+                    return faces[(int)Face.Direction.Front][boardSize - 1][y];
+                case (int)Face.Direction.Back:
+                    return faces[(int)Face.Direction.Right][boardSize - 1][y];
+                case (int)Face.Direction.Top:
+                    return faces[(int)Face.Direction.Left][boardSize - 1 - y][boardSize - 1];
+                case (int)Face.Direction.Bottom:
+                    return faces[(int)Face.Direction.Left][y][0];
+            }
+        }
+
+        return null;
+    }
+
+    private Face GetFaceRight(int f, int x, int y)
+    {
+        Face face = faces[f][x][y];
+
+        if (x < boardSize - 1)
+        {
+            return faces[f][x + 1][y];
+        }
+        else
+        {
+            switch (f)
+            {
+                case (int)Face.Direction.Front:
+                    return faces[(int)Face.Direction.Right][0][y];
+                case (int)Face.Direction.Left:
+                    return faces[(int)Face.Direction.Front][0][y];
+                case (int)Face.Direction.Right:
+                    return faces[(int)Face.Direction.Back][0][y];
+                case (int)Face.Direction.Back:
+                    return faces[(int)Face.Direction.Left][0][y];
+                case (int)Face.Direction.Top:
+                    return faces[(int)Face.Direction.Right][y][boardSize - 1];
+                case (int)Face.Direction.Bottom:
+                    return faces[(int)Face.Direction.Right][boardSize - 1 - y][0];
+            }
+        }
+
+        return null;
+    }
 
     private void SpawnCubes(float startX, float startY, float startZ)
     {
@@ -88,55 +230,60 @@ public class Spawner : MonoBehaviour {
                     Cube spawned = GetCubeType(x,y,z).Spawn(pos, colours, board, boardSize, new Vector3(x, y, z));
                     cubes[x, y, z] = spawned;
 
-                    Vector3 origin = pos;
-                    if (z == 0)
-                    {
-                        origin.z += -1;
-                        Face f = RaycastToFace(origin, Vector3.forward);
-                        faces[(int)Face.Direction.Front][x][y] = f;
-                        f.FaceDirection = Face.Direction.Front;
-                    }
-                    else if (z == boardSize - 1)
-                    {
-                        origin.z += 1;
-                        Face f = RaycastToFace(origin, Vector3.back);
-                        faces[(int)Face.Direction.Back][boardSize - 1 - x][y] = f;
-                        f.FaceDirection = Face.Direction.Back;
-                    }
-
-                    origin = pos;
-                    if (x == 0)
-                    {
-                        origin.x += -1;
-                        Face f = RaycastToFace(origin, Vector3.right);
-                        faces[(int)Face.Direction.Left][boardSize - 1 - z][y] = f;
-                        f.FaceDirection = Face.Direction.Left;
-                    } 
-                    else if (x == boardSize - 1)
-                    {
-                        origin.x += 1;
-                        Face f = RaycastToFace(origin, Vector3.left);
-                        faces[(int)Face.Direction.Right][z][y] = f;
-                        f.FaceDirection = Face.Direction.Right;
-                    }
-
-                    origin = pos;
-                    if (y == 0)
-                    {
-                        origin.y += -1;
-                        Face f = RaycastToFace(origin, Vector3.up);
-                        faces[(int)Face.Direction.Bottom][x][boardSize - 1 - z] = f;
-                        f.FaceDirection = Face.Direction.Bottom;
-                    }
-                    else if (y == boardSize - 1)
-                    {
-                        origin.y += 1;
-                        Face f = RaycastToFace(origin, Vector3.down);
-                        faces[(int)Face.Direction.Top][x][z] = f;
-                        f.FaceDirection = Face.Direction.Top;
-                    }
+                    GenerateFacesForCube(pos, x, y, z);
                 }
             }
+        }
+    }
+
+    private void GenerateFacesForCube(Vector3 pos, int x, int y, int z)
+    {
+        Vector3 origin = pos;
+        if (z == 0)
+        {
+            origin.z += -1;
+            Face f = RaycastToFace(origin, Vector3.forward);
+            faces[(int)Face.Direction.Front][x][y] = f;
+            f.FaceDirection = Face.Direction.Front;
+        }
+        else if (z == boardSize - 1)
+        {
+            origin.z += 1;
+            Face f = RaycastToFace(origin, Vector3.back);
+            faces[(int)Face.Direction.Back][boardSize - 1 - x][y] = f;
+            f.FaceDirection = Face.Direction.Back;
+        }
+
+        origin = pos;
+        if (x == 0)
+        {
+            origin.x += -1;
+            Face f = RaycastToFace(origin, Vector3.right);
+            faces[(int)Face.Direction.Left][boardSize - 1 - z][y] = f;
+            f.FaceDirection = Face.Direction.Left;
+        }
+        else if (x == boardSize - 1)
+        {
+            origin.x += 1;
+            Face f = RaycastToFace(origin, Vector3.left);
+            faces[(int)Face.Direction.Right][z][y] = f;
+            f.FaceDirection = Face.Direction.Right;
+        }
+
+        origin = pos;
+        if (y == 0)
+        {
+            origin.y += -1;
+            Face f = RaycastToFace(origin, Vector3.up);
+            faces[(int)Face.Direction.Bottom][x][boardSize - 1 - z] = f;
+            f.FaceDirection = Face.Direction.Bottom;
+        }
+        else if (y == boardSize - 1)
+        {
+            origin.y += 1;
+            Face f = RaycastToFace(origin, Vector3.down);
+            faces[(int)Face.Direction.Top][x][z] = f;
+            f.FaceDirection = Face.Direction.Top;
         }
     }
 

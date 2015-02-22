@@ -15,12 +15,18 @@ public class UIManager : MonoBehaviour, Timer.TimerListener {
 
     public AnimationCurve fontSizeCurve;
 
+    private float globalTextScale;
+
     private Timer timer;
     private int secondsFontSize, millisFontSize;
 
 	// Use this for initialization
 	void Start () 
     {
+        float horizRatio = Screen.width / 540f;
+        float vertRatio = Screen.height / 960f;
+        globalTextScale = Mathf.Sqrt(horizRatio * horizRatio + vertRatio * vertRatio);
+
         secondsFontSize = secondsDisplay.fontSize;
         millisFontSize = millisDisplay.fontSize;
 
@@ -44,8 +50,8 @@ public class UIManager : MonoBehaviour, Timer.TimerListener {
         Logger.SetValue("timeThisBlock", timeThisBlock.ToString());
         Logger.SetValue("fontSizeMultiplier", fontSizeMultiplier.ToString());
 
-        secondsDisplay.fontSize = (int) (secondsFontSize * fontSizeMultiplier);
-        millisDisplay.fontSize = (int)(millisFontSize * fontSizeMultiplier);
+        secondsDisplay.fontSize = (int) (secondsFontSize * fontSizeMultiplier * globalTextScale);
+        millisDisplay.fontSize = (int)(millisFontSize * fontSizeMultiplier * globalTextScale);
 
         if (time < shortTimeBlockThreshold + 1)
         {

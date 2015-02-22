@@ -15,4 +15,23 @@ public class Face : MonoBehaviour {
         set;
     }
 
+    public Face[] Neighbours
+    {
+        get;
+        set;
+    }
+
+    public void DebugColourFaces()
+    {
+        renderer.material.color = Color.grey;
+
+        for (int i = 0; i < 4; i++)
+        {
+            if (Neighbours[i])
+            {
+                Neighbours[i].renderer.material.color = Color.grey;
+            }
+        }
+    }
+
 }

@@ -122,31 +122,38 @@ public class Rotator : MonoBehaviour, InputHandler.InputListener {
 
                     Face touchingFace = FindTouchingFace();
 
-                    float dragAngle = Vector3.Angle(Vector3.up, direction);
-                    Logger.SetValue("drag angle", dragAngle.ToString());
-                    cubeTouchAxis = spawner.DetermineAxis(dragAngle, touchingFace.FaceDirection, out correctedDragDirection);
-
-                    if (cubeTouchAxis == Spawner.Axis.X)
+                    if (touchingFace)
                     {
-                        cubeTouchIndex = (int)touchingCube.Index.x;
-                    }
-                    else if (cubeTouchAxis == Spawner.Axis.Y) 
-                    {
-                        cubeTouchIndex = (int)touchingCube.Index.y;
-                    }
-                    else if (cubeTouchAxis == Spawner.Axis.Z)
-                    {
-                        cubeTouchIndex = (int)touchingCube.Index.z;
-                    }
+                        // DEBUGGING!
+                        touchingFace.DebugColourFaces();
+                        // END DEBUGGING!
 
-                    Cube[] childrenCubes;
-                    touchingAxis = spawner.MapCubesToAxis(cubeTouchAxis, cubeTouchIndex, out childrenCubes);
 
-                    foreach (Cube c in childrenCubes)
-                    {
-                        c.renderer.material.color = Color.white;
+                        float dragAngle = Vector3.Angle(Vector3.up, direction);
+                        Logger.SetValue("drag angle", dragAngle.ToString());
+                        cubeTouchAxis = spawner.DetermineAxis(dragAngle, touchingFace.FaceDirection, out correctedDragDirection);
+
+                        if (cubeTouchAxis == Spawner.Axis.X)
+                        {
+                            cubeTouchIndex = (int)touchingCube.Index.x;
+                        }
+                        else if (cubeTouchAxis == Spawner.Axis.Y) 
+                        {
+                            cubeTouchIndex = (int)touchingCube.Index.y;
+                        }
+                        else if (cubeTouchAxis == Spawner.Axis.Z)
+                        {
+                            cubeTouchIndex = (int)touchingCube.Index.z;
+                        }
+
+                        Cube[] childrenCubes;
+                        touchingAxis = spawner.MapCubesToAxis(cubeTouchAxis, cubeTouchIndex, out childrenCubes);
+
+                        foreach (Cube c in childrenCubes)
+                        {
+                            c.renderer.material.color = Color.white;
+                        }
                     }
-
                 }
             }
 
@@ -218,6 +225,10 @@ public class Rotator : MonoBehaviour, InputHandler.InputListener {
         }
 
         return null;
+    }
+
+    public void OnTouchStart() { 
+        // TODO are we doing something here? I forget...
     }
 
     public void OnTouchEnd()
