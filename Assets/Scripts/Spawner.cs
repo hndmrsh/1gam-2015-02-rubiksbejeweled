@@ -363,9 +363,6 @@ public class Spawner : MonoBehaviour {
     public GameObject MapCubesToAxis(Axis axis, int index, out Cube[] mappedChildrenCubes) {
         GameObject ax = axes[(int)axis][index];
         SetParentAllCubes(axis, index, ax, out mappedChildrenCubes);
-
-        cachedAxisRotation = ax.transform.localEulerAngles;
-
         return ax;
     }
 
@@ -374,9 +371,6 @@ public class Spawner : MonoBehaviour {
         SetParentAllCubes(axis, index, board, out mappedChildrenCubes);
 
         GameObject ax = axes[(int)axis][index];
-        Vector3 diff = ax.transform.localEulerAngles - cachedAxisRotation;
-
-        Logger.SetValue("diff", (Mathf.RoundToInt(diff.x) / 90).ToString());
     }
 
     private void SetParentAllCubes(Axis axis, int index, GameObject newParent, out Cube[] mappedChildrenCubes)

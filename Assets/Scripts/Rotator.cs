@@ -35,6 +35,8 @@ public class Rotator : MonoBehaviour, InputHandler.InputListener {
     private float startSnapAngle = 0f;
     private float snapToAngle = 0f;
 
+    # region Start/Update
+
     void Start()
     {
         gameController = GameObject.FindGameObjectWithTag("GameController");
@@ -94,103 +96,9 @@ public class Rotator : MonoBehaviour, InputHandler.InputListener {
         }
     }
 
-    //public void OnPinch(float amount)
-    //{
-    //    Vector3 cameraPosition = Camera.main.transform.position + Vector3.forward * -(amount / 50f);
-    //    cameraPosition.z = Mathf.Clamp(cameraPosition.z, -15, -10);
-    //    Camera.main.transform.position = cameraPosition;
-    //}
+    # endregion
 
-    public void OnRotate(float amount)
-    {
-        // TODO: need to call this in InputHandler also!
-    }
-
-    public void OnTwoFingerDrag(Vector2 direction)
-    {
-        transform.Rotate(direction * 0.5f, Space.World);
-    }
-
-    public void OnOneFingerDrag(Vector2 direction)
-    {
-        direction /= 2f;
-
-        if (!touchingCube)
-        {
-            // one finger dragging outside the cube should rotate it also
-            transform.Rotate(direction, Space.World);
-        }
-        else if (!snapping)
-        {
-            if (!touchingAxis && touchingCube && touchingFace)
-            {
-                // DEBUGGING!
-                touchingFace.DebugColourFaces();
-                // END DEBUGGING!
-
-                // find the touching axis
-                float dragAngle = Vector3.Angle(Vector3.up, direction);
-                Logger.SetValue("drag angle", dragAngle.ToString());
-                DragDirection dragDirection = dragAngle < 45 || dragAngle > 135 ? DragDirection.Horizontal : DragDirection.Vertical;
-                cubeTouchAxis = DetermineAxis(dragDirection, touchingFace.FaceDirection, out correctedDragDirection);
-
-                if (cubeTouchAxis == Spawner.Axis.X)
-                {
-                    cubeTouchIndex = (int)touchingCube.Index.x;
-                }
-                else if (cubeTouchAxis == Spawner.Axis.Y) 
-                {
-                    cubeTouchIndex = (int)touchingCube.Index.y;
-                }
-                else if (cubeTouchAxis == Spawner.Axis.Z)
-                {
-                    cubeTouchIndex = (int)touchingCube.Index.z;
-                }
-
-                Cube[] childrenCubes;
-                touchingAxis = spawner.MapCubesToAxis(cubeTouchAxis, cubeTouchIndex, out childrenCubes);
-
-                // DEBUGGING!
-                foreach (Cube c in childrenCubes)
-                {
-                    c.renderer.material.color = Color.white;
-                }
-                // END DEBUGGING!
-            }
-
-            if (touchingAxis)
-            {
-                Vector3 worldDirection = board.transform.InverseTransformDirection(CorrectAngles(direction));
-
-                Logger.SetValue("worldDirection", worldDirection.ToString());
-
-                Vector3 rotation;
-                switch (cubeTouchAxis)
-                {
-                    case Spawner.Axis.X:
-                        rotation = Vector3.right * worldDirection.x;
-                        break;
-                    case Spawner.Axis.Y:
-                        rotation = Vector3.down * worldDirection.y;
-                        break;
-                    case Spawner.Axis.Z:
-                    default:
-                        rotation = Vector3.back * worldDirection.z;
-                        break;
-                }
-
-                touchingAxis.transform.Rotate(rotation * 0.5f);
-            }
-        }
-    }
-
-    private Vector3 CorrectAngles(Vector2 direction)
-    {
-        Vector3 result = Vector3.zero;
-        result.x = direction.x * correctedDragDirection.x;
-        result.y = direction.y * correctedDragDirection.y;
-        return result;
-    }
+    # region Find touching functions
 
     private Cube FindTouchingCube(out Vector3 hitNormal)
     {
@@ -228,7 +136,121 @@ public class Rotator : MonoBehaviour, InputHandler.InputListener {
         return null;
     }
 
-    public void OnTouchStart() { 
+    # endregion
+
+    private void FinishedSnap()
+    {
+        touchingAxis = null;
+
+        Cube[] released;
+        spawner.UnmapCubesFromAxis(cubeTouchAxis, cubeTouchIndex, out released);
+
+        foreach (Cube c in released)
+        {
+            c.renderer.material.color = c.Colour;
+        }
+    }
+
+    /// <summary>
+    /// Determine the correct axis to rotate the selected cubes around.
+    /// </summary>
+    /// <param name="dragAngle"></param>
+    /// <param name="cubeTouchIndex"></param>
+    /// <returns></returns>
+    public Spawner.Axis DetermineAxis(DragDirection dragDirection, Face.Direction faceDirection, out Vector2 directionCorrection)
+    {
+        bool switchAxis;
+
+        switch (faceDirection)
+        {
+            case Face.Direction.Front:
+            case Face.Direction.Back:
+                switchAxis = ShouldSwitchAxisSelection(board.transform.rotation.eulerAngles.z);
+                if (switchAxis)
+                {
+                    directionCorrection = new Vector2(-1, 1);
+                }
+                else
+                {
+                    directionCorrection = new Vector2(1, -1);
+                }
+                
+                if (dragDirection == DragDirection.Horizontal != switchAxis)
+                {
+                    return Spawner.Axis.Y;
+                }
+                else
+                {
+                    return Spawner.Axis.X;
+                }
+            case Face.Direction.Left:
+            case Face.Direction.Right:
+                switchAxis = ShouldSwitchAxisSelection(board.transform.rotation.eulerAngles.x);
+                directionCorrection = new Vector2(-1, -1);
+
+                if (dragDirection == DragDirection.Horizontal != switchAxis)
+                {
+                    return Spawner.Axis.Y;
+                }
+                else
+                {
+                    return Spawner.Axis.Z;
+                }
+            case Face.Direction.Top:
+            case Face.Direction.Bottom:
+            default:
+                switchAxis = ShouldSwitchAxisSelection(board.transform.rotation.eulerAngles.y);
+                if (switchAxis)
+                {
+                    directionCorrection = new Vector2(-1, 1);
+                }
+                else
+                {
+                    directionCorrection = new Vector2(1, -1);
+                }
+
+                if (dragDirection == DragDirection.Horizontal != switchAxis)
+                {
+                    return Spawner.Axis.Z;
+                }
+                else
+                {
+                    return Spawner.Axis.X;
+                }
+        }
+    }
+
+    private bool ShouldSwitchAxisSelection(float axisValue)
+    {
+        return (axisValue > 45 && axisValue < 135) || (axisValue > 225 && axisValue < 315);
+    }
+
+    private float CalculateTargetAngle(float currentAngle)
+    {
+        float diff = currentAngle % 90;
+        float target = ((int)(currentAngle / 90)) * 90f;
+        if (diff > 45)
+        {
+            target = (target + 90f);
+        }
+        return target;
+    }
+
+    private Vector3 CorrectAngles(Vector2 direction)
+    {
+        Vector3 result = Vector3.zero;
+        result.x = direction.x * correctedDragDirection.x;
+        result.y = direction.y * correctedDragDirection.y;
+        return result;
+    }
+
+    # region Input handling
+
+    public void OnTouchStart()
+    {
+
+        // Find the touching cube and face
+
         touchingCube = FindTouchingCube(out cubeHitNormal);
 
         if (touchingCube)
@@ -239,6 +261,9 @@ public class Rotator : MonoBehaviour, InputHandler.InputListener {
 
     public void OnTouchEnd()
     {
+
+        // Snap the touching axis and clear the touching cube and face
+
         if (touchingAxis)
         {
             snapping = true;
@@ -265,75 +290,91 @@ public class Rotator : MonoBehaviour, InputHandler.InputListener {
         }
     }
 
-    private float CalculateTargetAngle(float currentAngle)
+    public void OnRotate(float amount)
     {
-        float diff = currentAngle % 90;
-        float target = ((int)(currentAngle / 90)) * 90f;
-        if (diff > 45)
+        if (!touchingAxis)
         {
-            target = (target + 90f);
-        }
-        return target;
-    }
-
-    private void FinishedSnap()
-    {
-        touchingAxis = null;
-
-        Cube[] released;
-        spawner.UnmapCubesFromAxis(cubeTouchAxis, cubeTouchIndex, out released);
-
-        foreach (Cube c in released)
-        {
-            c.renderer.material.color = c.Colour;
+            // Rotate the board around global Z
+            board.transform.Rotate(Vector3.forward, amount, Space.World);
+            touchingFace = null;
+            touchingCube = null;
         }
     }
 
-    /// <summary>
-    /// Determine the correct axis to rotate the selected cubes around.
-    /// </summary>
-    /// <param name="dragAngle"></param>
-    /// <param name="cubeTouchIndex"></param>
-    /// <returns></returns>
-    public Spawner.Axis DetermineAxis(DragDirection dragDirection, Face.Direction faceDirection, out Vector2 directionCorrection)
+    public void OnOneFingerDrag(Vector2 direction)
     {
-        switch (faceDirection)
+        if (!touchingCube)
         {
-            case Face.Direction.Front:
-            case Face.Direction.Back:
-                directionCorrection = new Vector2(1, -1);
-                if (dragDirection == DragDirection.Horizontal)
+            // Dragging outside the board spins it around
+            transform.Rotate(direction / 2f, Space.World);
+        }
+        else if (!snapping)
+        {
+            if (!touchingAxis && touchingCube && touchingFace)
+            {
+
+                // DEBUGGING!
+                touchingFace.DebugColourFaces();
+                // END DEBUGGING!
+
+                // Determine the touching axis
+                float dragAngle = Vector3.Angle(Vector3.up, direction);
+                Logger.SetValue("drag angle", dragAngle.ToString());
+                DragDirection dragDirection = dragAngle < 45 || dragAngle > 135 ? DragDirection.Horizontal : DragDirection.Vertical;
+                cubeTouchAxis = DetermineAxis(dragDirection, touchingFace.FaceDirection, out correctedDragDirection);
+
+                // Now parent the cubes to the selected axis
+                if (cubeTouchAxis == Spawner.Axis.X)
                 {
-                    return Spawner.Axis.Y;
+                    cubeTouchIndex = (int)touchingCube.Index.x;
                 }
-                else
+                else if (cubeTouchAxis == Spawner.Axis.Y)
                 {
-                    return Spawner.Axis.X;
+                    cubeTouchIndex = (int)touchingCube.Index.y;
                 }
-            case Face.Direction.Left:
-            case Face.Direction.Right:
-                directionCorrection = new Vector2(-1, -1);
-                if (dragDirection == DragDirection.Horizontal)
+                else if (cubeTouchAxis == Spawner.Axis.Z)
                 {
-                    return Spawner.Axis.Y;
+                    cubeTouchIndex = (int)touchingCube.Index.z;
                 }
-                else
+
+                Cube[] childrenCubes;
+                touchingAxis = spawner.MapCubesToAxis(cubeTouchAxis, cubeTouchIndex, out childrenCubes);
+
+                // DEBUGGING!
+                foreach (Cube c in childrenCubes)
                 {
-                    return Spawner.Axis.Z;
+                    c.renderer.material.color = Color.white;
                 }
-            case Face.Direction.Top:
-            case Face.Direction.Bottom:
-            default:
-                directionCorrection = new Vector2(1, -1);
-                if (dragDirection == DragDirection.Horizontal)
+                // END DEBUGGING!
+            }
+
+            if (touchingAxis)
+            {
+                // If we are touching an axis, rotate the axis according to the touch direction
+
+                Vector3 worldDirection = board.transform.InverseTransformDirection(CorrectAngles(direction));
+
+                Logger.SetValue("worldDirection", worldDirection.ToString());
+
+                Vector3 rotation;
+                switch (cubeTouchAxis)
                 {
-                    return Spawner.Axis.Z;
+                    case Spawner.Axis.X:
+                        rotation = Vector3.right * worldDirection.x;
+                        break;
+                    case Spawner.Axis.Y:
+                        rotation = Vector3.down * worldDirection.y;
+                        break;
+                    case Spawner.Axis.Z:
+                    default:
+                        rotation = Vector3.back * worldDirection.z;
+                        break;
                 }
-                else
-                {
-                    return Spawner.Axis.X;
-                }
+
+                touchingAxis.transform.Rotate(rotation * 0.5f);
+            }
         }
     }
 
+    # endregion
 }
