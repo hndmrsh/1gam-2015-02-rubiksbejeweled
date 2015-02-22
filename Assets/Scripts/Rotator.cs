@@ -16,6 +16,7 @@ public class Rotator : MonoBehaviour, InputHandler.InputListener {
     private GameObject board;
 
     private Cube touchingCube;
+    private Face touchingFace;
     private GameObject touchingAxis;
 
     private Vector3 cubeHitNormal;
@@ -109,52 +110,47 @@ public class Rotator : MonoBehaviour, InputHandler.InputListener {
     {
         direction /= 2f;
 
-        if (!snapping)
+        if (!touchingCube)
         {
-            // if we weren't already touching a cube, find the touching cube and set the correct axis
-
-            if (!touchingCube)
+            // one finger dragging outside the cube should rotate it also
+            transform.Rotate(direction, Space.World);
+        }
+        else if (!snapping)
+        {
+            if (!touchingAxis && touchingCube && touchingFace)
             {
-                touchingCube = FindTouchingCube(out cubeHitNormal);
+                // DEBUGGING!
+                touchingFace.DebugColourFaces();
+                // END DEBUGGING!
 
-                if (touchingCube)
+                // find the touching axis
+
+                float dragAngle = Vector3.Angle(Vector3.up, direction);
+                Logger.SetValue("drag angle", dragAngle.ToString());
+                cubeTouchAxis = spawner.DetermineAxis(dragAngle, touchingFace.FaceDirection, out correctedDragDirection);
+
+                if (cubeTouchAxis == Spawner.Axis.X)
                 {
-
-                    Face touchingFace = FindTouchingFace();
-
-                    if (touchingFace)
-                    {
-                        // DEBUGGING!
-                        touchingFace.DebugColourFaces();
-                        // END DEBUGGING!
-
-
-                        float dragAngle = Vector3.Angle(Vector3.up, direction);
-                        Logger.SetValue("drag angle", dragAngle.ToString());
-                        cubeTouchAxis = spawner.DetermineAxis(dragAngle, touchingFace.FaceDirection, out correctedDragDirection);
-
-                        if (cubeTouchAxis == Spawner.Axis.X)
-                        {
-                            cubeTouchIndex = (int)touchingCube.Index.x;
-                        }
-                        else if (cubeTouchAxis == Spawner.Axis.Y) 
-                        {
-                            cubeTouchIndex = (int)touchingCube.Index.y;
-                        }
-                        else if (cubeTouchAxis == Spawner.Axis.Z)
-                        {
-                            cubeTouchIndex = (int)touchingCube.Index.z;
-                        }
-
-                        Cube[] childrenCubes;
-                        touchingAxis = spawner.MapCubesToAxis(cubeTouchAxis, cubeTouchIndex, out childrenCubes);
-
-                        foreach (Cube c in childrenCubes)
-                        {
-                            c.renderer.material.color = Color.white;
-                        }
-                    }
+                    cubeTouchIndex = (int)touchingCube.Index.x;
                 }
+                else if (cubeTouchAxis == Spawner.Axis.Y) 
+                {
+                    cubeTouchIndex = (int)touchingCube.Index.y;
+                }
+                else if (cubeTouchAxis == Spawner.Axis.Z)
+                {
+                    cubeTouchIndex = (int)touchingCube.Index.z;
+                }
+
+                Cube[] childrenCubes;
+                touchingAxis = spawner.MapCubesToAxis(cubeTouchAxis, cubeTouchIndex, out childrenCubes);
+
+                // DEBUGGING!
+                foreach (Cube c in childrenCubes)
+                {
+                    c.renderer.material.color = Color.white;
+                }
+                // END DEBUGGING!
             }
 
             if (touchingAxis)
@@ -228,14 +224,18 @@ public class Rotator : MonoBehaviour, InputHandler.InputListener {
     }
 
     public void OnTouchStart() { 
-        // TODO are we doing something here? I forget...
+        touchingCube = FindTouchingCube(out cubeHitNormal);
+
+        if (touchingCube)
+        {
+            touchingFace = FindTouchingFace();
+        }
     }
 
     public void OnTouchEnd()
     {
         if (touchingAxis)
         {
-            touchingCube = null;
             snapping = true;
 
             switch (cubeTouchAxis)
@@ -254,6 +254,9 @@ public class Rotator : MonoBehaviour, InputHandler.InputListener {
                     snapToAngle = CalculateTargetAngle(touchingAxis.transform.localEulerAngles.z);
                     break;
             }
+
+            touchingCube = null;
+            touchingFace = null;
         }
     }
 
@@ -270,6 +273,8 @@ public class Rotator : MonoBehaviour, InputHandler.InputListener {
 
     private void FinishedSnap()
     {
+        touchingAxis = null;
+
         Cube[] released;
         spawner.UnmapCubesFromAxis(cubeTouchAxis, cubeTouchIndex, out released);
 
