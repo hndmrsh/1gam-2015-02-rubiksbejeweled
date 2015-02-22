@@ -20,7 +20,7 @@ public class Timer : MonoBehaviour {
         started = false;
     }
 
-    public void StartTimer(int startingTime)
+    public void StartTimer(float startingTime)
     {
         remainingTime = startingTime;
         started = true;

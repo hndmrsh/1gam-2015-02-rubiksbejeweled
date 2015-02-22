@@ -3,6 +3,11 @@ using System.Collections;
 
 public class Rotator : MonoBehaviour, InputHandler.InputListener {
 
+    public enum DragDirection
+    {
+        Horizontal, Vertical
+    }
+
     private const float SNAP_TIME = 0.2f;
 
     public LayerMask cubeMask;
@@ -124,10 +129,10 @@ public class Rotator : MonoBehaviour, InputHandler.InputListener {
                 // END DEBUGGING!
 
                 // find the touching axis
-
                 float dragAngle = Vector3.Angle(Vector3.up, direction);
                 Logger.SetValue("drag angle", dragAngle.ToString());
-                cubeTouchAxis = spawner.DetermineAxis(dragAngle, touchingFace.FaceDirection, out correctedDragDirection);
+                DragDirection dragDirection = dragAngle < 45 || dragAngle > 135 ? DragDirection.Horizontal : DragDirection.Vertical;
+                cubeTouchAxis = DetermineAxis(dragDirection, touchingFace.FaceDirection, out correctedDragDirection);
 
                 if (cubeTouchAxis == Spawner.Axis.X)
                 {
@@ -281,6 +286,53 @@ public class Rotator : MonoBehaviour, InputHandler.InputListener {
         foreach (Cube c in released)
         {
             c.renderer.material.color = c.Colour;
+        }
+    }
+
+    /// <summary>
+    /// Determine the correct axis to rotate the selected cubes around.
+    /// </summary>
+    /// <param name="dragAngle"></param>
+    /// <param name="cubeTouchIndex"></param>
+    /// <returns></returns>
+    public Spawner.Axis DetermineAxis(DragDirection dragDirection, Face.Direction faceDirection, out Vector2 directionCorrection)
+    {
+        switch (faceDirection)
+        {
+            case Face.Direction.Front:
+            case Face.Direction.Back:
+                directionCorrection = new Vector2(1, -1);
+                if (dragDirection == DragDirection.Horizontal)
+                {
+                    return Spawner.Axis.Y;
+                }
+                else
+                {
+                    return Spawner.Axis.X;
+                }
+            case Face.Direction.Left:
+            case Face.Direction.Right:
+                directionCorrection = new Vector2(-1, -1);
+                if (dragDirection == DragDirection.Horizontal)
+                {
+                    return Spawner.Axis.Y;
+                }
+                else
+                {
+                    return Spawner.Axis.Z;
+                }
+            case Face.Direction.Top:
+            case Face.Direction.Bottom:
+            default:
+                directionCorrection = new Vector2(1, -1);
+                if (dragDirection == DragDirection.Horizontal)
+                {
+                    return Spawner.Axis.Z;
+                }
+                else
+                {
+                    return Spawner.Axis.X;
+                }
         }
     }
 

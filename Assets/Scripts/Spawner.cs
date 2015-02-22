@@ -423,49 +423,4 @@ public class Spawner : MonoBehaviour {
     
     #endregion
 
-    /// <summary>
-    /// Determine the correct axis to rotate the selected cubes around.
-    /// </summary>
-    /// <param name="dragAngle"></param>
-    /// <param name="cubeTouchIndex"></param>
-    /// <returns></returns>
-    public Axis DetermineAxis(float dragAngle, Face.Direction faceDirection, out Vector2 directionCorrection) {
-        switch (faceDirection)
-        {
-            case Face.Direction.Front:
-            case Face.Direction.Back:
-                directionCorrection = new Vector2(1, -1);
-                if (dragAngle < 45 || dragAngle > 135)
-                {
-                    return Spawner.Axis.Y;
-                }
-                else
-                {
-                    return Spawner.Axis.X;
-                }
-            case Face.Direction.Left:
-            case Face.Direction.Right:
-                directionCorrection = new Vector2(-1, -1);
-                if (dragAngle < 45 || dragAngle > 135)
-                {
-                    return Spawner.Axis.Y;
-                }
-                else
-                {
-                    return Spawner.Axis.Z;
-                }
-            case Face.Direction.Top:
-            case Face.Direction.Bottom:
-            default:
-                directionCorrection = new Vector2(1, -1);
-                if (dragAngle < 45 || dragAngle > 135)
-                {
-                    return Spawner.Axis.Z;
-                }
-                else
-                {
-                    return Spawner.Axis.X;
-                }
-        }
-    }
 }

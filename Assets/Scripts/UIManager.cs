@@ -33,7 +33,7 @@ public class UIManager : MonoBehaviour, Timer.TimerListener {
         timer = gameObject.GetComponent<Timer>();
         timer.RegisterListener(this);
 
-        timer.StartTimer(60);
+        timer.StartTimer(59);
 	}
 
     void Timer.TimerListener.TimerTick(float remainingTime)
@@ -41,7 +41,7 @@ public class UIManager : MonoBehaviour, Timer.TimerListener {
         float time = Mathf.Max(remainingTime, 0f);
         secondsDisplay.text = ((int)time).ToString("D2");
 
-        int millis = (int)((time % (int)time) * 100);
+        int millis = (int)((time - (int)time) * 100);
         millisDisplay.text = (Mathf.Max(millis, 0).ToString("D2"));
 
         float timeThisBlock = timeBlockLength - (time % timeBlockLength);
