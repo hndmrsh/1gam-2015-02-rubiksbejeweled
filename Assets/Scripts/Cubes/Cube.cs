@@ -54,27 +54,23 @@ public abstract class Cube : MonoBehaviour
         CubeDepth = renderer.bounds.size.z;
     }
 
-    public Cube Spawn(Vector3 position, Color[] colourChoices, GameObject board, int boardSize, Vector3 index)
+    public Cube Spawn(Vector3 position, Board board, int boardSize, Vector3 index)
     {
         int x = (int)index.x;
         int y = (int)index.y;
         int z = (int)index.z;
 
         GameObject spawnedCube = (GameObject) Instantiate(gameObject, position, CalculateRotation(x, y, z, boardSize));
-        spawnedCube.transform.parent = board.transform;
+        spawnedCube.transform.parent = board.gameObject.transform;
 
         spawnedCube.name = "Cube: (" + x + "," + y + "," + z + ")";
 
         Cube newCube = spawnedCube.GetComponent<Cube>();
         newCube.Index = index;
 
-        ColourFaces(newCube, colourChoices);
-
         return newCube;
     }
 
     protected abstract Quaternion CalculateRotation(int x, int y, int z, int boardSize);
-
-    protected abstract void ColourFaces(Cube spawned, Color[] colourChoices);
 
 }

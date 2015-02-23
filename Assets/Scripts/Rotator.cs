@@ -18,14 +18,14 @@ public class Rotator : MonoBehaviour, InputHandler.InputListener {
 
     private InputHandler inputHandler;
 
-    private GameObject board;
+    private Board board;
 
     private Cube touchingCube;
     private Face touchingFace;
     private GameObject touchingAxis;
 
     private Vector3 cubeHitNormal;
-    private Spawner.Axis cubeTouchAxis;
+    private Board.Axis cubeTouchAxis;
     private int cubeTouchIndex;
 
     private Vector2 correctedDragDirection;
@@ -44,7 +44,7 @@ public class Rotator : MonoBehaviour, InputHandler.InputListener {
         gameController = GameObject.FindGameObjectWithTag("GameController");
         spawner = gameController.GetComponentInChildren<Spawner>();
 
-        board = GameObject.FindGameObjectWithTag("Board");
+        board = GameObject.FindGameObjectWithTag("Board").GetComponent<Board>();
 
         inputHandler = gameController.GetComponent<InputHandler>();
 
@@ -63,19 +63,19 @@ public class Rotator : MonoBehaviour, InputHandler.InputListener {
 
             switch (cubeTouchAxis)
             {
-                case Spawner.Axis.X:
+                case Board.Axis.X:
                     target = new Vector3(
                         Mathf.Lerp(startSnapAngle, snapToAngle, timeSnapping / SNAP_TIME),
                         touchingAxis.transform.localEulerAngles.y,
                         touchingAxis.transform.localEulerAngles.z);
                     break;
-                case Spawner.Axis.Y:
+                case Board.Axis.Y:
                     target = new Vector3(
                         touchingAxis.transform.localEulerAngles.x,
                         Mathf.Lerp(startSnapAngle, snapToAngle, timeSnapping / SNAP_TIME),
                         touchingAxis.transform.localEulerAngles.z);
                     break;
-                case Spawner.Axis.Z:
+                case Board.Axis.Z:
                 default:
                     target = new Vector3(
                         touchingAxis.transform.localEulerAngles.x,
@@ -142,16 +142,36 @@ public class Rotator : MonoBehaviour, InputHandler.InputListener {
 
     private void FinishedSnap()
     {
-        Vector3 fixedCached = FixedEulerAngles(cachedAxisRotation);
-        Vector3 fixedNew = FixedEulerAngles(touchingAxis.transform.localEulerAngles);
+        // first we want to rotate the internal representation of the board according to the axis that was rotated
 
-        Logger.SetValue("OLD ROT", fixedCached.ToString());
-        Logger.SetValue("NEW ROT", fixedNew.ToString());
+        float angleDiff = 0f;
+        switch (cubeTouchAxis)
+        {
+            case Board.Axis.X:
+                angleDiff = FixedEulerAngles(touchingAxis.transform.localEulerAngles).x - FixedEulerAngles(cachedAxisRotation).x;
+                break;
+            case Board.Axis.Y:
+                angleDiff = FixedEulerAngles(touchingAxis.transform.localEulerAngles).y - FixedEulerAngles(cachedAxisRotation).y;
+                break;
+            case Board.Axis.Z:
+                angleDiff = FixedEulerAngles(touchingAxis.transform.localEulerAngles).z - FixedEulerAngles(cachedAxisRotation).z;
+                break;
+        }
+
+        if (angleDiff < 0)
+        {
+            angleDiff += 360f;
+        }
+
+        int numberTurns = Mathf.RoundToInt(angleDiff) / 90;
+        Logger.SetValue("number turns", numberTurns.ToString());
+
+        board.RotateAxis(cubeTouchAxis, cubeTouchIndex, numberTurns);
 
         touchingAxis = null;
 
         Cube[] released;
-        spawner.UnmapCubesFromAxis(cubeTouchAxis, cubeTouchIndex, out released);
+        board.UnmapCubesFromAxis(cubeTouchAxis, cubeTouchIndex, out released);
 
         foreach (Cube c in released)
         {
@@ -161,7 +181,7 @@ public class Rotator : MonoBehaviour, InputHandler.InputListener {
 
     private Vector3 FixedEulerAngles(Vector3 eulerAngles)
     {
-        if (cubeTouchAxis == Spawner.Axis.X && eulerAngles.y > 175f)
+        if (cubeTouchAxis == Board.Axis.X && eulerAngles.y > 175f)
         {
             return new Vector3(eulerAngles.x + 180f,
                 eulerAngles.y - 180f,
@@ -177,7 +197,7 @@ public class Rotator : MonoBehaviour, InputHandler.InputListener {
     /// <param name="dragAngle"></param>
     /// <param name="cubeTouchIndex"></param>
     /// <returns></returns>
-    public Spawner.Axis DetermineAxis(DragDirection dragDirection, Face.Direction faceDirection, out Vector2 directionCorrection)
+    public Board.Axis DetermineAxis(DragDirection dragDirection, Face.Direction faceDirection, out Vector2 directionCorrection)
     {
         bool switchAxis;
 
@@ -197,11 +217,11 @@ public class Rotator : MonoBehaviour, InputHandler.InputListener {
                 
                 if (dragDirection == DragDirection.Horizontal != switchAxis)
                 {
-                    return Spawner.Axis.Y;
+                    return Board.Axis.Y;
                 }
                 else
                 {
-                    return Spawner.Axis.X;
+                    return Board.Axis.X;
                 }
             case Face.Direction.Left:
             case Face.Direction.Right:
@@ -210,11 +230,11 @@ public class Rotator : MonoBehaviour, InputHandler.InputListener {
 
                 if (dragDirection == DragDirection.Horizontal != switchAxis)
                 {
-                    return Spawner.Axis.Y;
+                    return Board.Axis.Y;
                 }
                 else
                 {
-                    return Spawner.Axis.Z;
+                    return Board.Axis.Z;
                 }
             case Face.Direction.Top:
             case Face.Direction.Bottom:
@@ -231,11 +251,11 @@ public class Rotator : MonoBehaviour, InputHandler.InputListener {
 
                 if (dragDirection == DragDirection.Horizontal != switchAxis)
                 {
-                    return Spawner.Axis.Z;
+                    return Board.Axis.Z;
                 }
                 else
                 {
-                    return Spawner.Axis.X;
+                    return Board.Axis.X;
                 }
         }
     }
@@ -290,15 +310,15 @@ public class Rotator : MonoBehaviour, InputHandler.InputListener {
 
             switch (cubeTouchAxis)
             {
-                case Spawner.Axis.X:
+                case Board.Axis.X:
                     startSnapAngle = touchingAxis.transform.localEulerAngles.x;
                     snapToAngle = CalculateTargetAngle(touchingAxis.transform.localEulerAngles.x);
                     break;
-                case Spawner.Axis.Y:
+                case Board.Axis.Y:
                     startSnapAngle = touchingAxis.transform.localEulerAngles.y;
                     snapToAngle = CalculateTargetAngle(touchingAxis.transform.localEulerAngles.y);
                     break;
-                case Spawner.Axis.Z:
+                case Board.Axis.Z:
                 default:
                     startSnapAngle = touchingAxis.transform.localEulerAngles.z;
                     snapToAngle = CalculateTargetAngle(touchingAxis.transform.localEulerAngles.z);
@@ -333,9 +353,9 @@ public class Rotator : MonoBehaviour, InputHandler.InputListener {
             if (!touchingAxis && touchingCube && touchingFace)
             {
 
-                // DEBUGGING!
-                touchingFace.DebugColourFaces();
-                // END DEBUGGING!
+                //// DEBUGGING!
+                //touchingFace.DebugColourFaces();
+                //// END DEBUGGING!
 
                 // Determine the touching axis
                 float dragAngle = Vector3.Angle(Vector3.up, direction);
@@ -344,30 +364,30 @@ public class Rotator : MonoBehaviour, InputHandler.InputListener {
                 cubeTouchAxis = DetermineAxis(dragDirection, touchingFace.FaceDirection, out correctedDragDirection);
 
                 // Now parent the cubes to the selected axis
-                if (cubeTouchAxis == Spawner.Axis.X)
+                if (cubeTouchAxis == Board.Axis.X)
                 {
                     cubeTouchIndex = (int)touchingCube.Index.x;
                 }
-                else if (cubeTouchAxis == Spawner.Axis.Y)
+                else if (cubeTouchAxis == Board.Axis.Y)
                 {
                     cubeTouchIndex = (int)touchingCube.Index.y;
                 }
-                else if (cubeTouchAxis == Spawner.Axis.Z)
+                else if (cubeTouchAxis == Board.Axis.Z)
                 {
                     cubeTouchIndex = (int)touchingCube.Index.z;
                 }
 
                 Cube[] childrenCubes;
-                touchingAxis = spawner.MapCubesToAxis(cubeTouchAxis, cubeTouchIndex, out childrenCubes);
+                touchingAxis = board.MapCubesToAxis(cubeTouchAxis, cubeTouchIndex, out childrenCubes);
 
                 cachedAxisRotation = touchingAxis.transform.localEulerAngles;
 
-                // DEBUGGING!
-                foreach (Cube c in childrenCubes)
-                {
-                    c.renderer.material.color = Color.white;
-                }
-                // END DEBUGGING!
+                //// DEBUGGING!
+                //foreach (Cube c in childrenCubes)
+                //{
+                //    c.renderer.material.color = Color.white;
+                //}
+                //// END DEBUGGING!
             }
 
             if (touchingAxis)
@@ -381,13 +401,13 @@ public class Rotator : MonoBehaviour, InputHandler.InputListener {
                 Vector3 rotation;
                 switch (cubeTouchAxis)
                 {
-                    case Spawner.Axis.X:
+                    case Board.Axis.X:
                         rotation = Vector3.right * worldDirection.x;
                         break;
-                    case Spawner.Axis.Y:
+                    case Board.Axis.Y:
                         rotation = Vector3.down * worldDirection.y;
                         break;
-                    case Spawner.Axis.Z:
+                    case Board.Axis.Z:
                     default:
                         rotation = Vector3.back * worldDirection.z;
                         break;

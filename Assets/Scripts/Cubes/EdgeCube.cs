@@ -3,13 +3,6 @@ using System.Collections;
 
 public class EdgeCube : Cube {
 
-    protected override void ColourFaces(Cube spawned, Color[] colourChoices)
-    {
-        spawned.transform.FindChild(zFace).renderer.material.color = colourChoices[(int)(Random.value * colourChoices.Length)];
-        spawned.transform.FindChild(xFace).renderer.material.color = colourChoices[(int)(Random.value * colourChoices.Length)];
-    }
-
-
     protected override Quaternion CalculateRotation(int x, int y, int z, int boardSize)
     {
         Vector3 rotation = new Vector3();
