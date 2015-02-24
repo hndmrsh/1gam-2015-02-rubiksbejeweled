@@ -39,4 +39,5 @@ public class CornerCube : Cube {
 
         return Quaternion.Euler(rotation);
     }
+
 }

@@ -71,7 +71,7 @@ public class Spawner : MonoBehaviour {
         }
     }
 
-    private void GenerateFacesForCube(Vector3 pos, int x, int y, int z)
+    public void GenerateFacesForCube(Vector3 pos, int x, int y, int z)
     {
         Vector3 origin = pos;
         if (z == 0)
@@ -209,7 +209,7 @@ public class Spawner : MonoBehaviour {
 
     # region Face adjacencies
 
-    private void GenerateFaceAdjacencies()
+    public void GenerateFaceAdjacencies()
     {
         for (int f = 0; f < 6; f++)
         {
@@ -352,4 +352,31 @@ public class Spawner : MonoBehaviour {
 
     # endregion
 
+
+    //  TODO This is probably dodgy shit and should be removed.
+
+    public void UpdateFaces()
+    {
+        for (int x = 0; x < boardSize; x++)
+        {
+            for (int y = 0; y < boardSize; y++)
+            {
+                for (int z = 0; z < boardSize; z++)
+                {
+
+                    if (board.Cubes[x, y, z])
+                    {
+                        Vector3 xVector = Vector3.right * (startX + ((Cube.CubeWidth + cubeSpacing) * x));
+                        Vector3 yVector = Vector3.up * (startY + ((Cube.CubeHeight + cubeSpacing) * y));
+                        Vector3 zVector = Vector3.forward * (startZ + ((Cube.CubeDepth + cubeSpacing) * z));
+                        Vector3 pos = xVector + yVector + zVector;
+
+                        GenerateFacesForCube(pos, x, y, z);
+                    }
+                }
+            }
+        }
+
+        GenerateFaceAdjacencies();
+    }
 }

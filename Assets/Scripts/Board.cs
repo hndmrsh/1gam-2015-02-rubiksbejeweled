@@ -1,7 +1,10 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System;
 
 public class Board : MonoBehaviour {
+
+    public Spawner spawner;
 
     public enum Axis
     {
@@ -59,12 +62,18 @@ public class Board : MonoBehaviour {
         }
     }
 
+    // TODO This stuff needs fixing still...
     public void RotateAxis(Axis axis, int index, int numberTurns)
     {
         for (int i = 0; i < numberTurns; i++)
         {
             RotateCubesOnce(axis, index);
+            //RotateFacesOnce(axis, index);
         }
+
+        //ReassignNeighbours(axis, index);
+        //spawner.UpdateFaces();
+
     }
 
     private void RotateCubesOnce(Axis axis, int index)
@@ -133,9 +142,83 @@ public class Board : MonoBehaviour {
                     }
                 }
                 break;
-
-
         }
+    }
+
+    private void RotateFacesOnce(Axis axis, int index)
+    {
+        Face[] temp;
+
+        switch (axis)
+        {
+            case Axis.X:
+                temp = Faces[(int)Face.Direction.Front][index];
+                Faces[(int)Face.Direction.Front][index] = Faces[(int)Face.Direction.Bottom][index];
+                Faces[(int)Face.Direction.Bottom][index] = ReverseArray(Faces[(int)Face.Direction.Back][boardSize - index - 1]);
+                Faces[(int)Face.Direction.Back][boardSize - index - 1] = ReverseArray(Faces[(int)Face.Direction.Top][index]);
+                Faces[(int)Face.Direction.Top][index] = temp;
+
+                AssignFacesDirection(Faces[(int)Face.Direction.Front][index], Face.Direction.Front);
+                AssignFacesDirection(Faces[(int)Face.Direction.Bottom][index], Face.Direction.Bottom);
+                AssignFacesDirection(Faces[(int)Face.Direction.Back][boardSize - index - 1], Face.Direction.Back);
+                AssignFacesDirection(Faces[(int)Face.Direction.Top][boardSize - index - 1], Face.Direction.Top);
+
+                // TODO this is cool, but forgotten to rotate the Left and Right faces if
+                // index == 0 or boardSize - 1. Whoops.
+
+                break;
+            case Axis.Y:
+
+                break;
+            case Axis.Z:
+                temp = Faces[(int)Face.Direction.Left][index];
+                Faces[(int)Face.Direction.Left][index] = GetVerticalArray(Faces[(int)Face.Direction.Top], index);
+                //Faces[(int)Face.Direction.Top][index] = GetVerticalArray(Faces[(int)Face.Direction.Right], boardSize - index - 1);
+
+                break;
+        }
+    }
+
+    private void AssignFacesDirection(Face[] faces, Face.Direction newDirection)
+    {
+        foreach (Face f in faces)
+        {
+            f.FaceDirection = newDirection;
+        }
+    }
+
+    private T[] ReverseArray<T>(T[] array)
+    {
+        T[] tmp = (T[]) array.Clone();
+        Array.Reverse(tmp);
+        return tmp;
+    }
+
+    private T[] GetVerticalArray<T>(T[][] array, int vertIndex)
+    {
+        T[] tmp = new T[array.Length];
+        for (int i = 0; i < tmp.Length; i++)
+        {
+            tmp[i] = array[i][vertIndex];
+        }
+        return tmp;
+    }
+
+    // TODO does this need to return the array? currently we are not, so need to check
+
+    private T[][] SetVerticalArray<T>(T[][] array, int vertIndex, T[] values)
+    {
+        for (int i = 0; i < values.Length; i++)
+        {
+            array[i][vertIndex] = values[i];
+        }
+
+        return array;
+    }
+
+    private void ReassignNeighbours(Axis axis, int index)
+    {
+        // TODO
     }
 
     #region Cube mapping
@@ -197,4 +280,5 @@ public class Board : MonoBehaviour {
     }
 
     #endregion
+
 }

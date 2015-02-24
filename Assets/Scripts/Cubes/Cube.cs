@@ -68,6 +68,11 @@ public abstract class Cube : MonoBehaviour
         Cube newCube = spawnedCube.GetComponent<Cube>();
         newCube.Index = index;
 
+        foreach (Face f in spawnedCube.GetComponentsInChildren<Face>())
+        {
+            f.gameObject.name += ": (" + x + "," + y + "," + z + ")";
+        }
+        
         return newCube;
     }
 
