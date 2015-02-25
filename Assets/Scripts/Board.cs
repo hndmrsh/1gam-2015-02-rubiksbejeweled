@@ -68,12 +68,11 @@ public class Board : MonoBehaviour {
         for (int i = 0; i < numberTurns; i++)
         {
             RotateCubesOnce(axis, index);
-            //RotateFacesOnce(axis, index);
+            RotateFacesOnce(axis, index);
         }
 
-        //ReassignNeighbours(axis, index);
+        ReassignNeighbours(axis, index);
         //spawner.UpdateFaces();
-
     }
 
     private void RotateCubesOnce(Axis axis, int index)
@@ -152,30 +151,68 @@ public class Board : MonoBehaviour {
         switch (axis)
         {
             case Axis.X:
+                // pretty sure this is all correct now, just need to do Y and Z
                 temp = Faces[(int)Face.Direction.Front][index];
                 Faces[(int)Face.Direction.Front][index] = Faces[(int)Face.Direction.Bottom][index];
-                Faces[(int)Face.Direction.Bottom][index] = ReverseArray(Faces[(int)Face.Direction.Back][boardSize - index - 1]);
-                Faces[(int)Face.Direction.Back][boardSize - index - 1] = ReverseArray(Faces[(int)Face.Direction.Top][index]);
+                Faces[(int)Face.Direction.Bottom][index] = ReverseArray(Faces[(int)Face.Direction.Back][index]);
+                Faces[(int)Face.Direction.Back][index] = ReverseArray(Faces[(int)Face.Direction.Top][index]);
                 Faces[(int)Face.Direction.Top][index] = temp;
 
                 AssignFacesDirection(Faces[(int)Face.Direction.Front][index], Face.Direction.Front);
                 AssignFacesDirection(Faces[(int)Face.Direction.Bottom][index], Face.Direction.Bottom);
-                AssignFacesDirection(Faces[(int)Face.Direction.Back][boardSize - index - 1], Face.Direction.Back);
-                AssignFacesDirection(Faces[(int)Face.Direction.Top][boardSize - index - 1], Face.Direction.Top);
+                AssignFacesDirection(Faces[(int)Face.Direction.Back][index], Face.Direction.Back);
+                AssignFacesDirection(Faces[(int)Face.Direction.Top][index], Face.Direction.Top);
 
-                // TODO this is cool, but forgotten to rotate the Left and Right faces if
-                // index == 0 or boardSize - 1. Whoops.
+                // TODO may not actually need the bool passed in (might be always true?)
+                
+                if (index == 0)
+                {
+                    RotateWholeSideFaces(Face.Direction.Left, true);
+                }
+                else if (index == boardSize - 1) 
+                {
+                    RotateWholeSideFaces(Face.Direction.Right, true);
+                }
+
 
                 break;
             case Axis.Y:
 
                 break;
             case Axis.Z:
-                temp = Faces[(int)Face.Direction.Left][index];
-                Faces[(int)Face.Direction.Left][index] = GetVerticalArray(Faces[(int)Face.Direction.Top], index);
-                //Faces[(int)Face.Direction.Top][index] = GetVerticalArray(Faces[(int)Face.Direction.Right], boardSize - index - 1);
 
                 break;
+        }
+    }
+
+    private void RotateWholeSideFaces(Face.Direction faceDirection, bool reverse)
+    {
+        Face[][] original = new Face[boardSize][];
+        for (int i = 0; i < boardSize; i++)
+        {
+            original[i] = new Face[boardSize];
+        }
+
+        for (int i = 0; i < boardSize; i++)
+        {
+            for (int j = 0; j < boardSize; j++)
+            {
+                original[i][j] = Faces[(int)faceDirection][i][j];
+            }
+        }
+        for (int i = 0; i < boardSize; i++)
+        {
+            for (int j = 0; j < boardSize; j++)
+            {
+                if (!reverse)
+                {
+                    Faces[(int)faceDirection][boardSize - 1 - j][i] = original[i][j];
+                }
+                else
+                {
+                    Faces[(int)faceDirection][j][boardSize - 1 - i] = original[i][j];
+                }
+            }
         }
     }
 

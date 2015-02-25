@@ -354,7 +354,7 @@ public class Rotator : MonoBehaviour, InputHandler.InputListener {
             {
 
                 //// DEBUGGING!
-                //touchingFace.DebugColourFaces();
+                touchingFace.DebugColourFaces();
                 //// END DEBUGGING!
 
                 // Determine the touching axis

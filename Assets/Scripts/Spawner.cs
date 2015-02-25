@@ -85,7 +85,7 @@ public class Spawner : MonoBehaviour {
         {
             origin.z += 1;
             Face f = RaycastToFace(origin, Vector3.back);
-            board.Faces[(int)Face.Direction.Back][boardSize - 1 - x][y] = f;
+            board.Faces[(int)Face.Direction.Back][x][y] = f;
             f.FaceDirection = Face.Direction.Back;
         }
 
@@ -94,7 +94,7 @@ public class Spawner : MonoBehaviour {
         {
             origin.x += -1;
             Face f = RaycastToFace(origin, Vector3.right);
-            board.Faces[(int)Face.Direction.Left][boardSize - 1 - z][y] = f;
+            board.Faces[(int)Face.Direction.Left][z][y] = f;
             f.FaceDirection = Face.Direction.Left;
         }
         else if (x == boardSize - 1)
@@ -110,7 +110,7 @@ public class Spawner : MonoBehaviour {
         {
             origin.y += -1;
             Face f = RaycastToFace(origin, Vector3.up);
-            board.Faces[(int)Face.Direction.Bottom][x][boardSize - 1 - z] = f;
+            board.Faces[(int)Face.Direction.Bottom][x][z] = f;
             f.FaceDirection = Face.Direction.Bottom;
         }
         else if (y == boardSize - 1)
@@ -244,15 +244,15 @@ public class Spawner : MonoBehaviour {
                 case (int)Face.Direction.Front:
                     return board.Faces[(int)Face.Direction.Top][x][0];
                 case (int)Face.Direction.Left:
-                    return board.Faces[(int)Face.Direction.Top][0][boardSize - 1 - x];
+                    return board.Faces[(int)Face.Direction.Top][0][x];
                 case (int)Face.Direction.Right:
                     return board.Faces[(int)Face.Direction.Top][boardSize - 1][x];
                 case (int)Face.Direction.Back:
-                    return board.Faces[(int)Face.Direction.Top][boardSize - 1 - x][boardSize - 1];
+                    return board.Faces[(int)Face.Direction.Top][x][boardSize - 1];
                 case (int)Face.Direction.Top:
-                    return board.Faces[(int)Face.Direction.Back][boardSize - 1 - x][boardSize - 1];
+                    return board.Faces[(int)Face.Direction.Back][x][boardSize - 1];
                 case (int)Face.Direction.Bottom:
-                    return board.Faces[(int)Face.Direction.Front][x][0];
+                    return board.Faces[(int)Face.Direction.Back][x][0];
             }
         }
 
@@ -273,17 +273,17 @@ public class Spawner : MonoBehaviour {
             switch (f)
             {
                 case (int)Face.Direction.Front:
-                    return board.Faces[(int)Face.Direction.Bottom][x][boardSize - 1];
+                    return board.Faces[(int)Face.Direction.Bottom][x][0];
                 case (int)Face.Direction.Left:
                     return board.Faces[(int)Face.Direction.Bottom][0][x];
                 case (int)Face.Direction.Right:
-                    return board.Faces[(int)Face.Direction.Bottom][boardSize - 1][boardSize - 1 - x];
+                    return board.Faces[(int)Face.Direction.Bottom][boardSize - 1][x];
                 case (int)Face.Direction.Back:
-                    return board.Faces[(int)Face.Direction.Bottom][boardSize - 1 - x][0];
+                    return board.Faces[(int)Face.Direction.Bottom][x][boardSize - 1];
                 case (int)Face.Direction.Top:
                     return board.Faces[(int)Face.Direction.Front][x][boardSize - 1];
                 case (int)Face.Direction.Bottom:
-                    return board.Faces[(int)Face.Direction.Back][boardSize - 1 - x][0];
+                    return board.Faces[(int)Face.Direction.Front][x][0];
             }
         }
 
@@ -303,15 +303,15 @@ public class Spawner : MonoBehaviour {
             switch (f)
             {
                 case (int)Face.Direction.Front:
-                    return board.Faces[(int)Face.Direction.Left][boardSize - 1][y];
+                    return board.Faces[(int)Face.Direction.Left][0][y];
                 case (int)Face.Direction.Left:
-                    return board.Faces[(int)Face.Direction.Back][boardSize - 1][y];
+                    return board.Faces[(int)Face.Direction.Front][0][y];
                 case (int)Face.Direction.Right:
                     return board.Faces[(int)Face.Direction.Front][boardSize - 1][y];
                 case (int)Face.Direction.Back:
-                    return board.Faces[(int)Face.Direction.Right][boardSize - 1][y];
+                    return board.Faces[(int)Face.Direction.Left][boardSize - 1][y];
                 case (int)Face.Direction.Top:
-                    return board.Faces[(int)Face.Direction.Left][boardSize - 1 - y][boardSize - 1];
+                    return board.Faces[(int)Face.Direction.Left][y][boardSize - 1];
                 case (int)Face.Direction.Bottom:
                     return board.Faces[(int)Face.Direction.Left][y][0];
             }
@@ -335,15 +335,15 @@ public class Spawner : MonoBehaviour {
                 case (int)Face.Direction.Front:
                     return board.Faces[(int)Face.Direction.Right][0][y];
                 case (int)Face.Direction.Left:
-                    return board.Faces[(int)Face.Direction.Front][0][y];
-                case (int)Face.Direction.Right:
                     return board.Faces[(int)Face.Direction.Back][0][y];
+                case (int)Face.Direction.Right:
+                    return board.Faces[(int)Face.Direction.Back][boardSize - 1][y];
                 case (int)Face.Direction.Back:
-                    return board.Faces[(int)Face.Direction.Left][0][y];
+                    return board.Faces[(int)Face.Direction.Right][boardSize - 1][y];
                 case (int)Face.Direction.Top:
                     return board.Faces[(int)Face.Direction.Right][y][boardSize - 1];
                 case (int)Face.Direction.Bottom:
-                    return board.Faces[(int)Face.Direction.Right][boardSize - 1 - y][0];
+                    return board.Faces[(int)Face.Direction.Right][y][0];
             }
         }
 
