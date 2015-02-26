@@ -157,12 +157,7 @@ public class Board : MonoBehaviour {
                 Faces[(int)Face.Direction.Bottom][index] = ReverseArray(Faces[(int)Face.Direction.Back][index]);
                 Faces[(int)Face.Direction.Back][index] = ReverseArray(Faces[(int)Face.Direction.Top][index]);
                 Faces[(int)Face.Direction.Top][index] = temp;
-
-                AssignFacesDirection(Faces[(int)Face.Direction.Front][index], Face.Direction.Front);
-                AssignFacesDirection(Faces[(int)Face.Direction.Bottom][index], Face.Direction.Bottom);
-                AssignFacesDirection(Faces[(int)Face.Direction.Back][index], Face.Direction.Back);
-                AssignFacesDirection(Faces[(int)Face.Direction.Top][index], Face.Direction.Top);
-
+                
                 // TODO may not actually need the bool passed in (might be always true?)
                 
                 if (index == 0)
@@ -174,16 +169,42 @@ public class Board : MonoBehaviour {
                     RotateWholeSideFaces(Face.Direction.Right, true);
                 }
 
-
                 break;
             case Axis.Y:
+                
 
                 break;
             case Axis.Z:
+                // TODO this has not been tested!
+
+                temp = Faces[(int) Face.Direction.Left][index];
+                Faces[(int) Face.Direction.Left][index] = GetVerticalArray(Faces[(int) Face.Direction.Top], index);
+                Faces[(int) Face.Direction.Top] = SetVerticalArray(Faces[(int) Face.Direction.Top], index, ReverseArray(Faces[(int)Face.Direction.Right][index]));
+                Faces[(int)Face.Direction.Right][index] = GetVerticalArray(Faces[(int) Face.Direction.Bottom], index);
+                Faces[(int) Face.Direction.Bottom] = SetVerticalArray(Faces[(int) Face.Direction.Bottom], index, temp);
+
+                // TODO may not actually need the bool passed in (might be always true?)
+                
+                if (index == 0)
+                {
+                    RotateWholeSideFaces(Face.Direction.Back, true);
+                }
+                else if (index == boardSize - 1) 
+                {
+                    RotateWholeSideFaces(Face.Direction.Front, true);
+                }
 
                 break;
         }
+
+        AssignFacesDirection(Faces[(int)Face.Direction.Front][index], Face.Direction.Front);
+        AssignFacesDirection(Faces[(int)Face.Direction.Bottom][index], Face.Direction.Bottom);
+        AssignFacesDirection(Faces[(int)Face.Direction.Back][index], Face.Direction.Back);
+        AssignFacesDirection(Faces[(int)Face.Direction.Top][index], Face.Direction.Top);
+
     }
+
+
 
     private void RotateWholeSideFaces(Face.Direction faceDirection, bool reverse)
     {
