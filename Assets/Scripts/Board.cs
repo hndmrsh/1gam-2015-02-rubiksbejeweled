@@ -71,7 +71,7 @@ public class Board : MonoBehaviour {
             RotateFacesOnce(axis, index);
         }
 
-        ReassignNeighbours(axis, index);
+        ReassignNeighbours(axis, index); // todo
         //spawner.UpdateFaces();
     }
 
@@ -151,14 +151,13 @@ public class Board : MonoBehaviour {
         switch (axis)
         {
             case Axis.X:
-                // pretty sure this is all correct now, just need to do Y and Z
+                // pretty sure this is all correct now
+
                 temp = Faces[(int)Face.Direction.Front][index];
                 Faces[(int)Face.Direction.Front][index] = Faces[(int)Face.Direction.Bottom][index];
                 Faces[(int)Face.Direction.Bottom][index] = ReverseArray(Faces[(int)Face.Direction.Back][index]);
                 Faces[(int)Face.Direction.Back][index] = ReverseArray(Faces[(int)Face.Direction.Top][index]);
                 Faces[(int)Face.Direction.Top][index] = temp;
-                
-                // TODO may not actually need the bool passed in (might be always true?)
                 
                 if (index == 0)
                 {
@@ -171,27 +170,41 @@ public class Board : MonoBehaviour {
 
                 break;
             case Axis.Y:
-                
+                // TODO last axis yay! Have started, but not tested yet
 
-                break;
-            case Axis.Z:
-                // TODO this has not been tested!
-
-                temp = Faces[(int) Face.Direction.Left][index];
-                Faces[(int) Face.Direction.Left][index] = GetVerticalArray(Faces[(int) Face.Direction.Top], index);
-                Faces[(int) Face.Direction.Top] = SetVerticalArray(Faces[(int) Face.Direction.Top], index, ReverseArray(Faces[(int)Face.Direction.Right][index]));
-                Faces[(int)Face.Direction.Right][index] = GetVerticalArray(Faces[(int) Face.Direction.Bottom], index);
-                Faces[(int) Face.Direction.Bottom] = SetVerticalArray(Faces[(int) Face.Direction.Bottom], index, temp);
-
-                // TODO may not actually need the bool passed in (might be always true?)
+                temp = GetVerticalArray(Faces[(int)Face.Direction.Front], index);
+                SetVerticalArray(Faces[(int)Face.Direction.Front], index, ReverseArray(Faces[(int)Face.Direction.Right][index]));
+                SetVerticalArray(Faces[(int)Face.Direction.Right], index, Faces[(int)Face.Direction.Back][index]);
+                SetVerticalArray(Faces[(int)Face.Direction.Back], index, ReverseArray(Faces[(int)Face.Direction.Left][index]));
+                SetVerticalArray(Faces[(int)Face.Direction.Left], index, temp);
                 
                 if (index == 0)
                 {
-                    RotateWholeSideFaces(Face.Direction.Back, true);
+                    RotateWholeSideFaces(Face.Direction.Top, true);
                 }
                 else if (index == boardSize - 1) 
                 {
-                    RotateWholeSideFaces(Face.Direction.Front, true);
+                    RotateWholeSideFaces(Face.Direction.Bottom, true);
+                }
+
+                break;
+                // TODO end untested section
+            case Axis.Z:
+                // think this is working now
+
+                temp = Faces[(int) Face.Direction.Left][index];
+                Faces[(int) Face.Direction.Left][index] = GetVerticalArray(Faces[(int) Face.Direction.Top], index);
+                SetVerticalArray(Faces[(int) Face.Direction.Top], index, ReverseArray(Faces[(int)Face.Direction.Right][index]));
+                Faces[(int)Face.Direction.Right][index] = GetVerticalArray(Faces[(int) Face.Direction.Bottom], index);
+                SetVerticalArray(Faces[(int) Face.Direction.Bottom], index, temp);
+
+                if (index == 0)
+                {
+                    RotateWholeSideFaces(Face.Direction.Front, false);
+                }
+                else if (index == boardSize - 1) 
+                {
+                    RotateWholeSideFaces(Face.Direction.Back, false);
                 }
 
                 break;
@@ -262,16 +275,12 @@ public class Board : MonoBehaviour {
         return tmp;
     }
 
-    // TODO does this need to return the array? currently we are not, so need to check
-
-    private T[][] SetVerticalArray<T>(T[][] array, int vertIndex, T[] values)
+    private void SetVerticalArray<T>(T[][] array, int vertIndex, T[] values)
     {
         for (int i = 0; i < values.Length; i++)
         {
             array[i][vertIndex] = values[i];
         }
-
-        return array;
     }
 
     private void ReassignNeighbours(Axis axis, int index)
