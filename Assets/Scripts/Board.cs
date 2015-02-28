@@ -62,7 +62,6 @@ public class Board : MonoBehaviour {
         }
     }
 
-    // TODO This stuff needs fixing still...
     public void RotateAxis(Axis axis, int index, int numberTurns)
     {
         for (int i = 0; i < numberTurns % 4; i++)
@@ -71,7 +70,7 @@ public class Board : MonoBehaviour {
             RotateFacesOnce(axis, index);
         }
 
-        ReassignNeighbours(axis, index); // todo
+        ReassignNeighbours(axis, index);
     }
 
     private void RotateCubesOnce(Axis axis, int index)
@@ -294,8 +293,9 @@ public class Board : MonoBehaviour {
 
     private void ReassignNeighbours(Axis axis, int index)
     {
+        // TODO this is currently a naive implementation and could be improved to
+        // only regenerate the faces which were actually changed
         spawner.GenerateFaceAdjacencies();
-        // TODO
     }
 
     #region Cube mapping
