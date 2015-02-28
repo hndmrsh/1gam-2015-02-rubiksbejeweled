@@ -353,9 +353,9 @@ public class Rotator : MonoBehaviour, InputHandler.InputListener {
             if (!touchingAxis && touchingCube && touchingFace)
             {
 
-                //// DEBUGGING!
+                // DEBUGGING!
                 touchingFace.DebugColourFaces();
-                //// END DEBUGGING!
+                // END DEBUGGING!
 
                 // Determine the touching axis
                 float dragAngle = Vector3.Angle(Vector3.up, direction);
@@ -382,12 +382,12 @@ public class Rotator : MonoBehaviour, InputHandler.InputListener {
 
                 cachedAxisRotation = touchingAxis.transform.localEulerAngles;
 
-                //// DEBUGGING!
+                // DEBUGGING!
                 //foreach (Cube c in childrenCubes)
                 //{
                 //    c.renderer.material.color = Color.white;
                 //}
-                //// END DEBUGGING!
+                // END DEBUGGING!
             }
 
             if (touchingAxis)

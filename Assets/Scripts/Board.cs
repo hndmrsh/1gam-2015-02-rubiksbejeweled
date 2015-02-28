@@ -65,14 +65,13 @@ public class Board : MonoBehaviour {
     // TODO This stuff needs fixing still...
     public void RotateAxis(Axis axis, int index, int numberTurns)
     {
-        for (int i = 0; i < numberTurns; i++)
+        for (int i = 0; i < numberTurns % 4; i++)
         {
             RotateCubesOnce(axis, index);
             RotateFacesOnce(axis, index);
         }
 
         ReassignNeighbours(axis, index); // todo
-        //spawner.UpdateFaces();
     }
 
     private void RotateCubesOnce(Axis axis, int index)
@@ -154,8 +153,8 @@ public class Board : MonoBehaviour {
                 // pretty sure this is all correct now
 
                 temp = Faces[(int)Face.Direction.Front][index];
-                Faces[(int)Face.Direction.Front][index] = Faces[(int)Face.Direction.Bottom][index];
-                Faces[(int)Face.Direction.Bottom][index] = ReverseArray(Faces[(int)Face.Direction.Back][index]);
+                Faces[(int)Face.Direction.Front][index] = ReverseArray(Faces[(int)Face.Direction.Bottom][index]);
+                Faces[(int)Face.Direction.Bottom][index] = Faces[(int)Face.Direction.Back][index];
                 Faces[(int)Face.Direction.Back][index] = ReverseArray(Faces[(int)Face.Direction.Top][index]);
                 Faces[(int)Face.Direction.Top][index] = temp;
                 
@@ -168,24 +167,34 @@ public class Board : MonoBehaviour {
                     RotateWholeSideFaces(Face.Direction.Right, true);
                 }
 
+                AssignFacesDirection(Faces[(int)Face.Direction.Front][index], Face.Direction.Front);
+                AssignFacesDirection(Faces[(int)Face.Direction.Back][index], Face.Direction.Back);
+                AssignFacesDirection(Faces[(int)Face.Direction.Top][index], Face.Direction.Top);
+                AssignFacesDirection(Faces[(int)Face.Direction.Bottom][index], Face.Direction.Bottom);
+
                 break;
             case Axis.Y:
                 // TODO last axis yay! Have started, but not tested yet
 
                 temp = GetVerticalArray(Faces[(int)Face.Direction.Front], index);
-                SetVerticalArray(Faces[(int)Face.Direction.Front], index, ReverseArray(Faces[(int)Face.Direction.Right][index]));
-                SetVerticalArray(Faces[(int)Face.Direction.Right], index, Faces[(int)Face.Direction.Back][index]);
-                SetVerticalArray(Faces[(int)Face.Direction.Back], index, ReverseArray(Faces[(int)Face.Direction.Left][index]));
-                SetVerticalArray(Faces[(int)Face.Direction.Left], index, temp);
+                SetVerticalArray(Faces[(int)Face.Direction.Front], index, GetVerticalArray(Faces[(int)Face.Direction.Right], index));
+                SetVerticalArray(Faces[(int)Face.Direction.Right], index, ReverseArray(GetVerticalArray(Faces[(int)Face.Direction.Back], index)));
+                SetVerticalArray(Faces[(int)Face.Direction.Back], index, GetVerticalArray(Faces[(int)Face.Direction.Left],index));
+                SetVerticalArray(Faces[(int)Face.Direction.Left], index, ReverseArray(temp));
                 
                 if (index == 0)
                 {
-                    RotateWholeSideFaces(Face.Direction.Top, true);
+                    RotateWholeSideFaces(Face.Direction.Bottom, true);
                 }
                 else if (index == boardSize - 1) 
                 {
-                    RotateWholeSideFaces(Face.Direction.Bottom, true);
+                    RotateWholeSideFaces(Face.Direction.Top, true);
                 }
+
+                AssignFacesDirection(GetVerticalArray(Faces[(int)Face.Direction.Front],index), Face.Direction.Front);
+                AssignFacesDirection(GetVerticalArray(Faces[(int)Face.Direction.Back],index), Face.Direction.Back);
+                AssignFacesDirection(GetVerticalArray(Faces[(int)Face.Direction.Left],index), Face.Direction.Left);
+                AssignFacesDirection(GetVerticalArray(Faces[(int)Face.Direction.Right],index), Face.Direction.Right);
 
                 break;
                 // TODO end untested section
@@ -196,7 +205,7 @@ public class Board : MonoBehaviour {
                 Faces[(int) Face.Direction.Left][index] = GetVerticalArray(Faces[(int) Face.Direction.Top], index);
                 SetVerticalArray(Faces[(int) Face.Direction.Top], index, ReverseArray(Faces[(int)Face.Direction.Right][index]));
                 Faces[(int)Face.Direction.Right][index] = GetVerticalArray(Faces[(int) Face.Direction.Bottom], index);
-                SetVerticalArray(Faces[(int) Face.Direction.Bottom], index, temp);
+                SetVerticalArray(Faces[(int) Face.Direction.Bottom], index, ReverseArray(temp));
 
                 if (index == 0)
                 {
@@ -207,13 +216,13 @@ public class Board : MonoBehaviour {
                     RotateWholeSideFaces(Face.Direction.Back, false);
                 }
 
+                AssignFacesDirection(GetVerticalArray(Faces[(int)Face.Direction.Top], index), Face.Direction.Top);
+                AssignFacesDirection(GetVerticalArray(Faces[(int)Face.Direction.Bottom], index), Face.Direction.Bottom);
+                AssignFacesDirection(Faces[(int)Face.Direction.Left][index], Face.Direction.Left);
+                AssignFacesDirection(Faces[(int)Face.Direction.Right][index], Face.Direction.Right);
+
                 break;
         }
-
-        AssignFacesDirection(Faces[(int)Face.Direction.Front][index], Face.Direction.Front);
-        AssignFacesDirection(Faces[(int)Face.Direction.Bottom][index], Face.Direction.Bottom);
-        AssignFacesDirection(Faces[(int)Face.Direction.Back][index], Face.Direction.Back);
-        AssignFacesDirection(Faces[(int)Face.Direction.Top][index], Face.Direction.Top);
 
     }
 
@@ -285,6 +294,7 @@ public class Board : MonoBehaviour {
 
     private void ReassignNeighbours(Axis axis, int index)
     {
+        spawner.GenerateFaceAdjacencies();
         // TODO
     }
 

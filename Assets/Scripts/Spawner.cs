@@ -201,7 +201,7 @@ public class Spawner : MonoBehaviour {
             {
                 for (int y = 0; y < boardSize; y++)
                 {
-                    board.Faces[f][x][y].renderer.material.color = colours[f];
+                    board.Faces[f][x][y].Colour(colours[f]);
                 }
             }
         }
