@@ -34,4 +34,5 @@ public class MidCube : Cube {
 
         return Quaternion.Euler(rotation);
     }
+
 }

@@ -14,6 +14,7 @@ public class Spawner : MonoBehaviour {
     public int boardSize;
     public float cubeSpacing;
 
+    public int minimumMatchCount = 3;
     public Color[] colours;
     
     private Vector3 cachedAxisRotation;
@@ -37,8 +38,8 @@ public class Spawner : MonoBehaviour {
         SpawnCubes(startX, startY, startZ);
         SpawnAxes(startX, startY, startZ);
 
-        ColourFaces();
         GenerateFaceAdjacencies();
+        ColourFaces();
 	}
 
     private void SpawnCubes(float startX, float startY, float startZ)
@@ -62,7 +63,7 @@ public class Spawner : MonoBehaviour {
                     Vector3 zVector = Vector3.forward * (startZ + ((Cube.CubeDepth + cubeSpacing) * z));
                     Vector3 pos = xVector + yVector + zVector;
 
-                    Cube spawned = GetCubeType(x,y,z).Spawn(pos, board, boardSize, new Vector3(x, y, z));
+                    Cube spawned = GetCubeType(x,y,z).Spawn(pos, board, boardSize, new Vector3(x, y, z), false);
                     board.Cubes[x, y, z] = spawned;
 
                     GenerateFacesForCube(pos, x, y, z);
@@ -201,7 +202,7 @@ public class Spawner : MonoBehaviour {
             {
                 for (int y = 0; y < boardSize; y++)
                 {
-                    board.Faces[f][x][y].Colour(colours[(int)(Random.value * colours.Length)]);
+                    board.Faces[f][x][y].SafeColour(colours, (int)(Random.value * colours.Length), 2);
                 }
             }
         }
@@ -218,21 +219,28 @@ public class Spawner : MonoBehaviour {
                 for (int y = 0; y < boardSize; y++)
                 {
                     Face face = board.Faces[f][x][y];
-                    face.Neighbours = new Face[4];
+                    face.F = f;
+                    face.X = x;
+                    face.Y = y;
 
-                    face.Neighbours[0] = GetFaceUp(f, x, y);
-                    face.Neighbours[1] = GetFaceLeft(f, x, y);
-                    face.Neighbours[2] = GetFaceRight(f, x, y);
-                    face.Neighbours[3] = GetFaceDown(f, x, y);
+                    GenerateFaceAdjacencies(face);
                 }
             }
         }
     }
 
+    public void GenerateFaceAdjacencies(Face face)
+    {
+        face.Neighbours = new Face[4];
+
+        face.Neighbours[0] = GetFaceUp(face.F, face.X, face.Y);
+        face.Neighbours[1] = GetFaceLeft(face.F, face.X, face.Y);
+        face.Neighbours[2] = GetFaceRight(face.F, face.X, face.Y);
+        face.Neighbours[3] = GetFaceDown(face.F, face.X, face.Y);
+    }
+
     private Face GetFaceUp(int f, int x, int y)
     {
-        Face face = board.Faces[f][x][y];
-
         if (y < boardSize - 1)
         {
             return board.Faces[f][x][y + 1];
@@ -262,8 +270,6 @@ public class Spawner : MonoBehaviour {
 
     private Face GetFaceDown(int f, int x, int y)
     {
-        Face face = board.Faces[f][x][y];
-
         if (y > 0)
         {
             return board.Faces[f][x][y - 1];
@@ -292,8 +298,6 @@ public class Spawner : MonoBehaviour {
 
     private Face GetFaceLeft(int f, int x, int y)
     {
-        Face face = board.Faces[f][x][y];
-
         if (x > 0)
         {
             return board.Faces[f][x - 1][y];
@@ -322,8 +326,6 @@ public class Spawner : MonoBehaviour {
 
     private Face GetFaceRight(int f, int x, int y)
     {
-        Face face = board.Faces[f][x][y];
-
         if (x < boardSize - 1)
         {
             return board.Faces[f][x + 1][y];
@@ -352,31 +354,4 @@ public class Spawner : MonoBehaviour {
 
     # endregion
 
-
-    //  TODO This is probably dodgy shit and should be removed.
-
-    public void UpdateFaces()
-    {
-        for (int x = 0; x < boardSize; x++)
-        {
-            for (int y = 0; y < boardSize; y++)
-            {
-                for (int z = 0; z < boardSize; z++)
-                {
-
-                    if (board.Cubes[x, y, z])
-                    {
-                        Vector3 xVector = Vector3.right * (startX + ((Cube.CubeWidth + cubeSpacing) * x));
-                        Vector3 yVector = Vector3.up * (startY + ((Cube.CubeHeight + cubeSpacing) * y));
-                        Vector3 zVector = Vector3.forward * (startZ + ((Cube.CubeDepth + cubeSpacing) * z));
-                        Vector3 pos = xVector + yVector + zVector;
-
-                        GenerateFacesForCube(pos, x, y, z);
-                    }
-                }
-            }
-        }
-
-        GenerateFaceAdjacencies();
-    }
 }

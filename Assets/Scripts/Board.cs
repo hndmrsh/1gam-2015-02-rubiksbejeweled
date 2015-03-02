@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 using System;
 
 public class Board : MonoBehaviour {
@@ -37,16 +38,6 @@ public class Board : MonoBehaviour {
 
     private int boardSize;
 
-	// Use this for initialization
-	void Start () {
-	
-	}
-	
-	// Update is called once per frame
-	void Update () {
-	
-	}
-
     public void Init(int boardSize)
     {
         this.boardSize = boardSize;
@@ -71,6 +62,7 @@ public class Board : MonoBehaviour {
         }
 
         ReassignNeighbours(axis, index);
+        CheckMatches(axis, index);
     }
 
     private void RotateCubesOnce(Axis axis, int index)
@@ -149,8 +141,6 @@ public class Board : MonoBehaviour {
         switch (axis)
         {
             case Axis.X:
-                // pretty sure this is all correct now
-
                 temp = Faces[(int)Face.Direction.Front][index];
                 Faces[(int)Face.Direction.Front][index] = ReverseArray(Faces[(int)Face.Direction.Bottom][index]);
                 Faces[(int)Face.Direction.Bottom][index] = Faces[(int)Face.Direction.Back][index];
@@ -173,8 +163,6 @@ public class Board : MonoBehaviour {
 
                 break;
             case Axis.Y:
-                // TODO last axis yay! Have started, but not tested yet
-
                 temp = GetVerticalArray(Faces[(int)Face.Direction.Front], index);
                 SetVerticalArray(Faces[(int)Face.Direction.Front], index, GetVerticalArray(Faces[(int)Face.Direction.Right], index));
                 SetVerticalArray(Faces[(int)Face.Direction.Right], index, ReverseArray(GetVerticalArray(Faces[(int)Face.Direction.Back], index)));
@@ -196,10 +184,7 @@ public class Board : MonoBehaviour {
                 AssignFacesDirection(GetVerticalArray(Faces[(int)Face.Direction.Right],index), Face.Direction.Right);
 
                 break;
-                // TODO end untested section
             case Axis.Z:
-                // think this is working now
-
                 temp = Faces[(int) Face.Direction.Left][index];
                 Faces[(int) Face.Direction.Left][index] = GetVerticalArray(Faces[(int) Face.Direction.Top], index);
                 SetVerticalArray(Faces[(int) Face.Direction.Top], index, ReverseArray(Faces[(int)Face.Direction.Right][index]));
@@ -258,6 +243,47 @@ public class Board : MonoBehaviour {
         }
     }
 
+    private void CheckMatches(Axis axis, int index)
+    {
+        switch (axis)
+        {
+            case Axis.X:
+                CheckMatches(Faces[(int)Face.Direction.Front][index]);
+                CheckMatches(Faces[(int)Face.Direction.Back][index]);
+                CheckMatches(Faces[(int)Face.Direction.Top][index]);
+                CheckMatches(Faces[(int)Face.Direction.Bottom][index]);
+                break;
+            case Axis.Y:
+                CheckMatches(GetVerticalArray(Faces[(int)Face.Direction.Front], index));
+                CheckMatches(GetVerticalArray(Faces[(int)Face.Direction.Back], index));
+                CheckMatches(GetVerticalArray(Faces[(int)Face.Direction.Left], index));
+                CheckMatches(GetVerticalArray(Faces[(int)Face.Direction.Right], index));
+                break;
+            case Axis.Z:
+                CheckMatches(GetVerticalArray(Faces[(int)Face.Direction.Top], index));
+                CheckMatches(GetVerticalArray(Faces[(int)Face.Direction.Bottom], index));
+                CheckMatches(Faces[(int)Face.Direction.Left][index]);
+                CheckMatches(Faces[(int)Face.Direction.Right][index]);
+                break;
+        }
+    }
+
+    private void CheckMatches(Face[] faces)
+    {
+        foreach (Face f in faces) {
+            List<Face> matches = new List<Face>();
+            if (f.MatchNeighbours(matches))
+            {
+                foreach (Face m in matches)
+                {
+                    m.Colour(Color.white);
+                    m.FaceMatched();
+                    m.Cube.Destroy();
+                }
+            }
+        }
+    }
+
     private void AssignFacesDirection(Face[] faces, Face.Direction newDirection)
     {
         foreach (Face f in faces)
@@ -310,8 +336,6 @@ public class Board : MonoBehaviour {
     public void UnmapCubesFromAxis(Axis axis, int index, out Cube[] mappedChildrenCubes)
     {
         SetParentAllCubes(axis, index, gameObject, out mappedChildrenCubes);
-
-        GameObject ax = Axes[(int)axis][index];
     }
 
     private void SetParentAllCubes(Axis axis, int index, GameObject newParent, out Cube[] mappedChildrenCubes)
@@ -357,5 +381,23 @@ public class Board : MonoBehaviour {
     }
 
     #endregion
+
+    public void UpdateCube(Vector3 index, Cube newCube)
+    {
+        Cubes[(int)index.x, (int)index.y, (int)index.z] = newCube;
+    }
+
+
+    internal void UpdateFace(int f, int x, int y, Face newFace)
+    {
+        Faces[f][x][y] = newFace;
+
+        spawner.GenerateFaceAdjacencies(newFace);
+        foreach (Face n in newFace.Neighbours)
+        {
+            spawner.GenerateFaceAdjacencies(n);
+        }
+    }
+
 
 }

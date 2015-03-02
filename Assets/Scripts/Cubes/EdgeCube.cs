@@ -50,4 +50,5 @@ public class EdgeCube : Cube {
 
         return Quaternion.Euler(rotation);
     }
+
 }

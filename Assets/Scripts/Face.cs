@@ -1,10 +1,19 @@
 ﻿
 using UnityEngine;
-using System.Collections;
+using System.Collections.Generic;
 
 public class Face : MonoBehaviour {
 
+    private const bool DEBUGGING = false;
     private const float FADE_TIME = 2f;
+
+    private Spawner spawner;
+
+    public Cube Cube
+    {
+        get;
+        set;
+    }
 
     public enum Direction
     {
@@ -24,13 +33,40 @@ public class Face : MonoBehaviour {
     }
 
     private Color colour;
-    
+    private ParticleSystem particles;
+
+    public int F
+    {
+        get;
+        set;
+    }
+
+    public int X
+    {
+        get;
+        set;
+    }
+
+    public int Y
+    {
+        get;
+        set;
+    }
+
     // DEBUG COUNTER
     public float debugTime = 0f;
 
+    void Start()
+    {
+        this.spawner = GameObject.FindGameObjectWithTag("GameController").GetComponent<Spawner>();
+
+        this.particles = GetComponentInChildren<ParticleSystem>();
+        this.particles.startColor = colour;
+    }
+
     void Update()
     {
-        if (debugTime >= 0f)
+        if (DEBUGGING && debugTime >= 0f)
         {
             debugTime = Mathf.Max(debugTime - Time.deltaTime, 0);
             renderer.material.color = Color.Lerp(colour, Color.white, debugTime / FADE_TIME);
@@ -39,13 +75,16 @@ public class Face : MonoBehaviour {
 
     public void DebugColourFaces()
     {
-        debugTime = FADE_TIME;
-
-        for (int i = 0; i < 4; i++)
+        if (DEBUGGING)
         {
-            if (Neighbours[i])
+            debugTime = FADE_TIME;
+
+            for (int i = 0; i < 4; i++)
             {
-                Neighbours[i].debugTime = FADE_TIME;
+                if (Neighbours[i])
+                {
+                    Neighbours[i].debugTime = FADE_TIME;
+                }
             }
         }
     }
@@ -56,4 +95,71 @@ public class Face : MonoBehaviour {
         renderer.material.color = colour;
     }
 
+    public void SafeColour(Color[] possibleColours, int val, int levelsToCheck)
+    {
+        do
+        {
+            Colour(possibleColours[val]);
+            val = (val + 1) % possibleColours.Length;
+        } while (CheckColourSafety(new List<Face>(), colour, levelsToCheck));
+    }
+
+    private bool CheckColourSafety(List<Face> checkedFaces, Color colour, int levelsToCheck)
+    {
+        if (levelsToCheck == 0)
+        {
+            return true;
+        }
+
+        foreach (Face n in Neighbours)
+        {
+            if (!checkedFaces.Contains(n))
+            {
+                checkedFaces.Add(n);
+                if (n.colour == colour)
+                {
+                    return false;
+                }
+                else
+                {
+                    bool childMatch = !n.CheckColourSafety(checkedFaces, colour, levelsToCheck - 1);
+                    if (childMatch)
+                    {
+                        return false;
+                    }
+                }
+            }
+        }
+
+        return true;
+    }
+
+    public bool MatchNeighbours(List<Face> matchedFaces)
+    {
+        matchedFaces.Add(this);
+
+        foreach (Face n in Neighbours)
+        {
+            if (!matchedFaces.Contains(n) && n.colour == colour)
+            {
+                n.MatchNeighbours(matchedFaces);
+            }
+        }
+
+        return matchedFaces.Count >= spawner.minimumMatchCount;
+    }
+
+    public void FaceMatched()
+    {
+        particles.Play();
+    }
+
+    public void CopyFaceIndex(Face from, Board boardToUpdate)
+    {
+        F = from.F;
+        X = from.X;
+        Y = from.Y;
+
+        boardToUpdate.UpdateFace(F, X, Y, this);
+    }
 }
